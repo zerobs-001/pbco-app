@@ -21,255 +21,215 @@ export interface Portfolio {
   id: string;
   user_id: string;
   name: string;
-  globals: GlobalSettings;
-  start_year: number;
+  description?: string;
+  global_settings_id: string;
   created_at: string;
   updated_at: string;
+  // Calculated fields
+  total_value?: number;
+  average_lvr?: number;
+  average_dscr?: number;
+  income_replacement_year?: number;
+  total_properties?: number;
+  modeled_properties?: number;
+  total_annual_cashflow?: number;
+  portfolio_break_even_year?: number;
 }
 
 export interface GlobalSettings {
-  startYear: number;
-  marginalTax: number;
-  medicare: number;
-  rentGrowth: number;
-  expenseInflation: number;
-  capitalGrowth: number;
-  targetIncome: number;
+  id: string;
+  portfolio_id: string;
+  rent_growth_rate: number; // Annual percentage
+  capital_growth_rate: number; // Annual percentage
+  expense_inflation_rate: number; // Annual percentage
+  tax_rate: number; // Marginal tax rate percentage
+  discount_rate: number; // For NPV calculations
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Property {
   id: string;
   portfolio_id: string;
-  data: PropertyInput;
+  name: string;
+  type: PropertyType;
+  address?: string;
+  purchase_price: number;
+  current_value: number;
+  purchase_date: string;
+  strategy: InvestmentStrategy;
+  cashflow_status: CashflowStatus;
   created_at: string;
   updated_at: string;
+  // Related data
+  loan?: Loan;
+  property_metrics?: PropertyMetrics;
+  cashflow_projection?: PropertyCashflowProjection;
 }
 
-export interface PropertyInput {
-  id: string;
-  state: string;
-  propertyType: PropertyType;
-  strategy: InvestmentStrategy;
-  purchasePrice: number;
-  settlementYearIndex: number;
-  initialRentPa: number;
-  vacancyPct: number;
-  pmFeePct: number;
-  otherExpensesPa: number;
-  insurancePa: number;
-  ratesStrataPa: number;
-  depreciationPa: number;
-  landTaxPa: number;
-  capexYearIndex?: number;
-  capexAmount?: number;
-  sellingYearIndex?: number;
-  sellingCostsPct: number;
-  stampDuty?: number;
-  lmi?: number;
-}
+export type PropertyType = 'residential_house' | 'residential_unit' | 'commercial_office' | 'commercial_retail' | 'commercial_industrial' | 'mixed_use';
 
-export type PropertyType = 
-  | 'RESIDENTIAL_HOUSE'
-  | 'RESIDENTIAL_UNIT'
-  | 'COMMERCIAL_OFFICE'
-  | 'COMMERCIAL_RETAIL'
-  | 'COMMERCIAL_INDUSTRIAL';
+export type InvestmentStrategy = 'buy_hold' | 'manufacture_equity' | 'value_add_commercial';
 
-export type InvestmentStrategy = 
-  | 'BUY_AND_HOLD'
-  | 'MANUFACTURE_EQUITY'
-  | 'VALUE_ADD_COMMERCIAL';
-
-export interface StrategyData {
-  // Buy & Hold (baseline)
-  BUY_AND_HOLD?: {
-    // Optional one-off capex legacy fields
-    capexYearIndex?: number;
-    capexAmount?: number;
-  };
-  
-  // Manufacture Equity
-  MANUFACTURE_EQUITY?: {
-    startYearIndex: number;
-    durationMonths: number;
-    capexBudget: number;
-    contingencyPct: number;
-    downtimeWeeks: number;
-    expectedRentUpliftPct?: number;
-    expectedRentUpliftAmount?: number;
-    endValueOverride?: number;
-    funding: 'cash' | 'loan_top_up';
-    capitaliseInterest: boolean;
-  };
-  
-  // Value-Add Commercial
-  VALUE_ADD_COMMERCIAL?: {
-    currentNetLease: boolean; // Net lease toggle
-    marketRentPa: number;
-    targetOccupancyPct: number;
-    incentivePct: number;
-    leasingDowntimeWeeks: number;
-    capexProgramPa: number;
-    revalueCapRate?: number;
-  };
-}
+export type CashflowStatus = 'not_modeled' | 'modeling' | 'modeled' | 'error';
 
 export interface Loan {
   id: string;
   property_id: string;
-  data: LoanInput;
+  type: LoanType;
+  principal_amount: number;
+  interest_rate: number;
+  term_years: number;
+  start_date: string;
+  rate_step_ups?: RateStepUp[];
   created_at: string;
   updated_at: string;
 }
 
-export interface LoanInput {
-  propertyId: string;
-  loanType: LoanType;
-  initialLoan: number;
-  interestRatePct: number;
-  ioYears: number;
-  termYears: number;
-  rateStepUpPp: number;
+export type LoanType = 'interest_only' | 'principal_interest';
+
+export interface RateStepUp {
+  year: number;
+  new_rate: number;
 }
 
-export type LoanType = 'INTEREST_ONLY' | 'PRINCIPAL_AND_INTEREST';
+export interface PropertyMetrics {
+  id: string;
+  property_id: string;
+  lvr: number; // Loan to Value Ratio
+  dscr: number; // Debt Service Coverage Ratio
+  cash_on_cash_return: number;
+  break_even_year: number;
+  net_present_value: number;
+  internal_rate_of_return: number;
+  created_at: string;
+  updated_at: string;
+}
 
-export interface Results {
+export interface PropertyCashflowProjection {
+  id: string;
+  property_id: string;
+  strategy: InvestmentStrategy;
+  annual_cashflow: number;
+  break_even_year: number;
+  net_present_value: number;
+  internal_rate_of_return: number;
+  year_by_year_projection: YearlyProjection[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface YearlyProjection {
+  year: number;
+  rent_income: number;
+  expenses: number;
+  loan_payment: number;
+  tax_liability: number;
+  net_cashflow: number;
+  cumulative_cashflow: number;
+  property_value: number;
+  loan_balance: number;
+}
+
+export interface PortfolioCashflow {
   id: string;
   portfolio_id: string;
-  scenario: string;
-  engine_version: string;
-  year_rows: YearRow[];
-  kpis: KPIs;
-  events: Event[];
-  computed_at: string;
+  total_annual_cashflow: number;
+  portfolio_break_even_year: number;
+  income_replacement_year: number;
+  year_by_year_projection: PortfolioYearlyProjection[];
+  created_at: string;
+  updated_at: string;
 }
 
-export interface YearRow {
-  yearIndex: number;
-  yearLabel: string;
-  netTaxableIncome: number;
-  tax: number;
-  afterTaxCF: number;
-  interest: number;
-  principal: number;
-  portfolioValue: number;
-  totalLoans: number;
-  equity: number;
-  lvr: number;
-  dscr: number;
-}
-
-export interface KPIs {
-  incomeReplacementYear: number;
-  currentYearAfterTaxCF: number;
-  currentLVR: number;
-  currentDSCR: number;
-}
-
-export interface Event {
+export interface PortfolioYearlyProjection {
   year: number;
-  type: EventType;
-  description: string;
-  propertyId?: string;
+  total_rent_income: number;
+  total_expenses: number;
+  total_loan_payments: number;
+  total_tax_liability: number;
+  net_portfolio_cashflow: number;
+  cumulative_portfolio_cashflow: number;
+  total_portfolio_value: number;
+  total_loan_balance: number;
 }
 
-export type EventType = 
-  | 'SETTLEMENT'
-  | 'IO_TO_PI'
-  | 'WORKS_START'
-  | 'WORKS_COMPLETE'
-  | 'RENT_UPLIFT'
-  | 'LEASE_UP'
-  | 'SALE';
-
-export interface Consent {
+export interface ReferenceData {
   id: string;
-  user_id: string;
-  version: string;
-  accepted_at: string;
-}
-
-export interface AuditLog {
-  id: string;
-  actor_user_id: string;
-  action: string;
-  target_type: string;
-  target_id: string;
-  diff?: Record<string, any>;
-  ip?: string;
-  user_agent?: string;
-  created_at: string;
-}
-
-// Reference data types
-export interface ReferenceLMI {
-  id: string;
-  lender_class: string;
-  lvr_min: number;
-  lvr_max: number;
-  loan_min: number;
-  loan_max: number;
-  premium_pct: number;
-  effective_from: string;
-  effective_to?: string;
+  category: string;
+  name: string;
+  value: number;
+  description?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface ReferenceStampDuty {
-  id: string;
-  state: string;
-  bracket_min: number;
-  bracket_max: number;
-  formula_text: string;
-  first_home_flag: boolean;
-  investor_flag: boolean;
-  effective_from: string;
-  effective_to?: string;
-  created_at: string;
-  updated_at: string;
+// Additional types for modeling interface
+
+export interface ModelingAssumptions {
+  rent_growth_rate: number;
+  capital_growth_rate: number;
+  expense_inflation_rate: number;
+  tax_rate: number;
+  discount_rate: number;
 }
 
-export interface ReferenceDefaults {
-  id: string;
-  key: string;
-  value_json: any;
-  description: string;
-  effective_from: string;
-  effective_to?: string;
-  created_at: string;
-  updated_at: string;
+export interface StrategyComparison {
+  strategy: InvestmentStrategy;
+  break_even_year: number;
+  net_present_value: number;
+  internal_rate_of_return: number;
+  annual_cashflow: number;
+  key_advantages: string[];
+  key_disadvantages: string[];
 }
 
-export interface ReferenceCapRates {
-  id: string;
-  region: string;
-  asset_type: string;
-  cap_rate: number;
-  source: string;
-  effective_from: string;
-  effective_to?: string;
-  created_at: string;
-  updated_at: string;
+export interface PropertyModelingResult {
+  property: Property;
+  assumptions: ModelingAssumptions;
+  projection: PropertyCashflowProjection;
+  strategy_comparisons: StrategyComparison[];
+  recommendations: string[];
 }
 
-// API Response types
-export interface ApiResponse<T = any> {
-  data?: T;
-  error?: {
-    code: string;
-    message: string;
-    field?: string;
+// UI Component Props
+
+export interface KpiCardProps {
+  title: string;
+  value: string;
+  accent: 'blue' | 'green' | 'orange' | 'purple' | 'red';
+  helper?: string;
+  trend?: {
+    direction: 'up' | 'down' | 'neutral';
+    value: string;
   };
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+export interface PropertyCardProps {
+  property: Property;
+  onEdit?: (propertyId: string) => void;
+  onModel?: (propertyId: string) => void;
+  onView?: (propertyId: string) => void;
+}
+
+export interface CashflowChartProps {
+  projections: YearlyProjection[];
+  breakEvenYear?: number;
+  height?: number;
+  width?: number;
+}
+
+export interface ModelingControlsProps {
+  assumptions: ModelingAssumptions;
+  onAssumptionsChange: (assumptions: ModelingAssumptions) => void;
+  onRunProjection: () => void;
+  onResetDefaults: () => void;
+  isLoading?: boolean;
+}
+
+export interface StrategySelectorProps {
+  selectedStrategy: InvestmentStrategy;
+  onStrategyChange: (strategy: InvestmentStrategy) => void;
+  disabled?: boolean;
 }

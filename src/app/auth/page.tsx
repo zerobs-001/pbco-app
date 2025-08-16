@@ -1,10 +1,11 @@
 import AuthPage from '@/components/auth/AuthPage';
 
-export default function Auth({
+export default async function Auth({
   searchParams,
 }: {
-  searchParams: { mode?: string };
+  searchParams: Promise<{ mode?: string }>;
 }) {
-  const mode = searchParams.mode === 'signup' ? 'signup' : 'signin';
+  const params = await searchParams;
+  const mode = params.mode === 'signup' ? 'signup' : 'signin';
   return <AuthPage mode={mode} />;
 }

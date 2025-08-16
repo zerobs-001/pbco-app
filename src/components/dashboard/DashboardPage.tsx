@@ -2,26 +2,15 @@
 
 import React, { useMemo } from "react";
 
-// ZERO‑INSTALL VERSION
-// • No next/font
-// • No external icon libraries
-// • All icons are inline SVG components
-// → Add this to your index.html once:
-// <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-// <style>
-//   :root { --font-plus: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; }
-//   .font-plus { font-family: var(--font-plus); }
-// </style>
-
 export default function DashboardPage() {
   return (
     <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
       <AppHeader />
       <main className="mx-auto max-w-[1400px] aspect-[16/9] px-6 pb-8 pt-6">
         <div className="flex h-full w-full flex-col gap-6 overflow-hidden rounded-2xl">
-          <TitleRow />
+          <PortfolioHeader />
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <KpiCard title="Total Portfolio Value" value="$2.4M" accent="blue" helper="Across 3 portfolios" />
+            <KpiCard title="Total Portfolio Value" value="$2.4M" accent="blue" helper="Across 3 properties" />
             <KpiCard title="Average LVR" value="65.2%" accent="orange" helper="Target ≤ 70%" />
             <KpiCard title="Average DSCR" value="1.8x" accent="green" helper="> 1.25x is healthy" />
             <KpiCard title="Income Replacement Year" value="2032" accent="purple" helper="Projection based on plan" />
@@ -29,16 +18,16 @@ export default function DashboardPage() {
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-6">
             <div className="xl:col-span-2 h-[min(50vh,520px)] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
-                <h3 className="text-lg font-semibold">Investments</h3>
+                <h3 className="text-lg font-semibold">My Investment Portfolio</h3>
                 <button className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
-                  <IconUpload className="h-4 w-4" /> Import
+                  <IconPlus className="h-4 w-4" /> Add Property
                 </button>
               </div>
-              <PortfolioTable />
+              <PropertyTable />
             </div>
             <div className="grid h-[min(50vh,520px)] grid-rows-2 gap-6">
+              <PortfolioActions />
               <RecentActivity />
-              <QuickActions />
             </div>
           </section>
         </div>
@@ -47,126 +36,162 @@ export default function DashboardPage() {
   );
 }
 
-function TitleRow() {
+function PortfolioHeader() {
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-[#111827]">My Investment Portfolio</h1>
+        <p className="text-[#6b7280] mt-1">Manage your properties and track cashflow projections</p>
+      </div>
       <div className="flex gap-3">
-        <button className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#1e4ed8]">Create Portfolio</button>
-        <button className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-medium text-[#111827] hover:shadow-sm">Add Property</button>
-      </div>
-    </div>
-  );
-}
-
-function KpiCard({ title, value, accent, helper }: {
-  title: string;
-  value: string;
-  accent: "blue" | "orange" | "green" | "purple";
-  helper: string;
-}) {
-  const colors = {
-    blue: "text-[#2563eb]",
-    orange: "text-orange-500",
-    green: "text-green-600",
-    purple: "text-purple-600",
-  };
-  return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-[#6b7280]">{title}</p>
-      <p className={`mt-2 text-2xl font-bold ${colors[accent]}`}>{value}</p>
-      <p className="mt-1 text-xs text-[#9ca3af]">{helper}</p>
-    </div>
-  );
-}
-
-function QuickActions() {
-  const actions = [
-    { label: "Create New Portfolio" },
-    { label: "Import Portfolio Data" },
-    { label: "Export All Data" },
-    { label: "View Tutorial" },
-  ];
-  return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <h3 className="mb-3 text-sm font-semibold">Quick Actions</h3>
-      <div className="flex flex-col gap-2">
-        {actions.map((a) => (
-          <button key={a.label} className="rounded-md border border-[#e5e7eb] px-3 py-2 text-sm hover:bg-[#f9fafb] text-left">{a.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RecentActivity() {
-  const activities = [
-    "Updated Sydney Investment",
-    "Added Property to Melbourne",
-    "Generated Forecast Report",
-    "Updated Loan Settings",
-  ];
-  return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <h3 className="mb-3 text-sm font-semibold">Recent Activity</h3>
-      <ul className="space-y-2 text-sm">
-        {activities.map((a, i) => (
-          <li key={i} className="text-[#374151]">• {a}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function AppHeader() {
-  return (
-    <header className="flex items-center justify-between border-b border-[#e5e7eb] bg-white px-6 py-4 shadow-sm">
-      <div className="flex items-baseline gap-2">
-        <span className="text-xl font-bold">PBCo</span>
-        <span className="text-sm text-[#6b7280]">Portfolio Forecaster</span>
-      </div>
-      <div className="flex items-center gap-4">
-        <button className="relative">
-          <IconBell className="h-5 w-5 text-[#6b7280]" />
-          <span className="absolute -right-1 -top-1 inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+        <button className="inline-flex items-center gap-2 rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8] focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(37,99,235,0.2)]">
+          <IconPlus className="h-4 w-4" /> Add Property
         </button>
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-[#e5e7eb]"></div>
-          <IconChevronDown className="h-4 w-4 text-[#6b7280]" />
+        <button className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
+          <IconSettings className="h-4 w-4" /> Settings
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({ title, value, accent, helper }: { title: string; value: string; accent: string; helper?: string }) {
+  const accentColors = {
+    blue: "border-l-[#2563eb]",
+    green: "border-l-[#059669]",
+    orange: "border-l-[#d97706]",
+    purple: "border-l-[#7c3aed]",
+    red: "border-l-[#dc2626]",
+  };
+
+  return (
+    <div className={`rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm border-l-4 ${accentColors[accent as keyof typeof accentColors]}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-[#6b7280]">{title}</p>
+          <p className="text-2xl font-bold text-[#111827] mt-1">{value}</p>
+          {helper && <p className="text-xs text-[#9ca3af] mt-1">{helper}</p>}
         </div>
       </div>
-    </header>
+    </div>
   );
 }
 
-function PortfolioTable() {
-  const rows = useMemo(() => [
-    { name: "Sydney Investment", value: 850000, lvr: 0.68, dscr: 1.9 },
-    { name: "Melbourne Investment", value: 620000, lvr: 0.62, dscr: 2.1 },
-    { name: "Brisbane Investment", value: 480000, lvr: 0.7, dscr: 1.7 },
-  ], []);
+function PropertyTable() {
+  const properties = [
+    {
+      id: "1",
+      name: "Sydney House",
+      type: "Residential",
+      value: "$850K",
+      lvr: "68%",
+      dscr: "1.9x",
+      status: "modeled" as const,
+      cashflow: "+$12K/yr",
+      breakEven: "2028",
+      strategy: "Buy & Hold",
+    },
+    {
+      id: "2",
+      name: "Melbourne Unit",
+      type: "Residential",
+      value: "$620K",
+      lvr: "62%",
+      dscr: "2.1x",
+      status: "modeled" as const,
+      cashflow: "+$8K/yr",
+      breakEven: "2030",
+      strategy: "Buy & Hold",
+    },
+    {
+      id: "3",
+      name: "Brisbane Office",
+      type: "Commercial",
+      value: "$480K",
+      lvr: "70%",
+      dscr: "1.7x",
+      status: "needs_modeling" as const,
+      cashflow: "Not modeled",
+      breakEven: "N/A",
+      strategy: "Value-Add",
+    },
+  ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "modeled":
+        return <IconCheck className="h-4 w-4 text-green-600" />;
+      case "needs_modeling":
+        return <IconAlert className="h-4 w-4 text-orange-600" />;
+      case "error":
+        return <IconX className="h-4 w-4 text-red-600" />;
+      default:
+        return <IconClock className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "modeled":
+        return "Modeled";
+      case "needs_modeling":
+        return "Needs Modeling";
+      case "error":
+        return "Error";
+      default:
+        return "Pending";
+    }
+  };
 
   return (
-    <div className="h-[calc(100%-57px)] overflow-auto">
-      <table className="min-w-full divide-y divide-[#e5e7eb]">
+    <div className="overflow-x-auto">
+      <table className="w-full">
         <thead className="bg-[#f9fafb]">
           <tr>
-            {["Investment","Value","LVR","DSCR","Actions"].map((h) => (
-              <th key={h} scope="col" className="sticky top-0 z-10 whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#6b7280]">{h}</th>
-            ))}
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">Property</th>
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">Type</th>
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">Value</th>
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">LVR</th>
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">DSCR</th>
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">Status</th>
+            <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#f1f5f9] bg-white">
-          {rows.map((r) => (
-            <tr key={r.name} className="hover:bg-[#f9fafb]">
-              <td className="whitespace-nowrap px-5 py-3 text-sm font-medium">{r.name}</td>
-              <td className="whitespace-nowrap px-5 py-3 text-sm">{formatCurrency(r.value)}</td>
-              <td className="whitespace-nowrap px-5 py-3 text-sm">{(r.lvr * 100).toFixed(0)}%</td>
-              <td className="whitespace-nowrap px-5 py-3 text-sm">{r.dscr.toFixed(1)}x</td>
-              <td className="whitespace-nowrap px-5 py-3 text-sm">
+        <tbody className="divide-y divide-[#e5e7eb]">
+          {properties.map((property) => (
+            <tr key={property.id} className="hover:bg-[#f9fafb]">
+              <td className="px-5 py-4">
+                <div>
+                  <div className="font-medium text-[#111827]">{property.name}</div>
+                  <div className="text-sm text-[#6b7280]">
+                    Cashflow: {property.cashflow} | Break-even: {property.breakEven} | Strategy: {property.strategy}
+                  </div>
+                </div>
+              </td>
+              <td className="px-5 py-4 text-sm text-[#111827]">{property.type}</td>
+              <td className="px-5 py-4 text-sm text-[#111827]">{property.value}</td>
+              <td className="px-5 py-4 text-sm text-[#111827]">{property.lvr}</td>
+              <td className="px-5 py-4 text-sm text-[#111827]">{property.dscr}</td>
+              <td className="px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <button className="inline-flex items-center gap-1 rounded-md border border-[#e5e7eb] bg-white px-2.5 py-1.5 text-xs font-medium hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]"><IconEdit3 className="h-4 w-4" /> Edit</button>
-                  <button className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#e5e7eb] bg-white hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]" aria-label="More actions"><IconMoreVertical className="h-4 w-4" /></button>
+                  {getStatusIcon(property.status)}
+                  <span className="text-sm text-[#111827]">{getStatusText(property.status)}</span>
+                </div>
+              </td>
+              <td className="px-5 py-4">
+                <div className="flex gap-2">
+                  {property.status === "needs_modeling" ? (
+                    <button className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
+                      <IconPlay className="h-3 w-3" /> Model
+                    </button>
+                  ) : (
+                    <button className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
+                      <IconEye className="h-3 w-3" /> View
+                    </button>
+                  )}
+                  <button className="inline-flex items-center gap-1 rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-xs font-medium text-[#111827] hover:bg-[#f9fafb]">
+                    <IconEdit className="h-3 w-3" /> Edit
+                  </button>
                 </div>
               </td>
             </tr>
@@ -177,38 +202,243 @@ function PortfolioTable() {
   );
 }
 
-// Inline SVG Icons
-function IconBell({ className = "" }: { className?: string }) {
+function PortfolioActions() {
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+      <h3 className="text-lg font-semibold mb-4">Portfolio Actions</h3>
+      <div className="space-y-3">
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
+          <IconChart className="h-5 w-5 text-[#2563eb]" />
+          <div>
+            <div className="font-medium text-[#111827]">Generate Portfolio Report</div>
+            <div className="text-sm text-[#6b7280]">Run 30-year projections</div>
+          </div>
+        </button>
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
+          <IconDownload className="h-5 w-5 text-[#059669]" />
+          <div>
+            <div className="font-medium text-[#111827]">Export Portfolio Data</div>
+            <div className="text-sm text-[#6b7280]">Download CSV/JSON</div>
+          </div>
+        </button>
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
+          <IconTrendingUp className="h-5 w-5 text-[#d97706]" />
+          <div>
+            <div className="font-medium text-[#111827]">View Income Timeline</div>
+            <div className="text-sm text-[#6b7280]">See replacement progression</div>
+          </div>
+        </button>
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
+          <IconCompare className="h-5 w-5 text-[#7c3aed]" />
+          <div>
+            <div className="font-medium text-[#111827]">Compare Properties</div>
+            <div className="text-sm text-[#6b7280]">Side-by-side analysis</div>
+          </div>
+        </button>
+      </div>
+    </div>
   );
 }
 
-function IconChevronDown({ className = "" }: { className?: string }) {
+function RecentActivity() {
+  const activities = [
+    { id: "1", action: "Modeled Sydney House", time: "2 hours ago", type: "modeling" },
+    { id: "2", action: "Updated Melbourne Unit", time: "1 day ago", type: "update" },
+    { id: "3", action: "Added Brisbane Office", time: "2 days ago", type: "add" },
+    { id: "4", action: "Generated Forecast", time: "3 days ago", type: "report" },
+  ];
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "modeling":
+        return <IconChart className="h-4 w-4 text-[#2563eb]" />;
+      case "update":
+        return <IconEdit className="h-4 w-4 text-[#059669]" />;
+      case "add":
+        return <IconPlus className="h-4 w-4 text-[#d97706]" />;
+      case "report":
+        return <IconFileText className="h-4 w-4 text-[#7c3aed]" />;
+      default:
+        return <IconCircle className="h-4 w-4 text-[#6b7280]" />;
+    }
+  };
+
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+      <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+      <div className="space-y-3">
+        {activities.map((activity) => (
+          <div key={activity.id} className="flex items-center gap-3">
+            {getActivityIcon(activity.type)}
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-[#111827] truncate">{activity.action}</div>
+              <div className="text-xs text-[#6b7280]">{activity.time}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function IconUpload({ className = "" }: { className?: string }) {
+function AppHeader() {
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 9l5-5 5 5M12 4v12" /></svg>
+    <header className="border-b border-[#e5e7eb] bg-white">
+      <div className="mx-auto max-w-[1400px] px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="text-xl font-bold text-[#111827]">Property Portfolio CF</div>
+            <nav className="hidden md:flex items-center gap-6">
+              <a href="#" className="text-[#6b7280] hover:text-[#111827]">Dashboard</a>
+              <a href="#" className="text-[#6b7280] hover:text-[#111827]">Properties</a>
+              <a href="#" className="text-[#6b7280] hover:text-[#111827]">Reports</a>
+              <a href="#" className="text-[#6b7280] hover:text-[#111827]">Settings</a>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="rounded-full p-2 text-[#6b7280] hover:bg-[#f3f4f6]">
+              <IconBell className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-[#2563eb] flex items-center justify-center">
+                <span className="text-sm font-medium text-white">JD</span>
+              </div>
+              <span className="hidden md:block text-sm font-medium text-[#111827]">John Doe</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }
 
-function IconEdit3({ className = "" }: { className?: string }) {
+// Icon components
+function IconPlus({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5h2m-1 0v14m9-7H4" /></svg>
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
   );
 }
 
-function IconMoreVertical({ className = "" }: { className?: string }) {
+function IconSettings({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
   );
 }
 
-// Dummy helpers
-function formatCurrency(num: number) {
-  return `$${num.toLocaleString()}`;
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+function IconAlert({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+    </svg>
+  );
+}
+
+function IconX({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+function IconClock({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function IconPlay({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function IconEye({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  );
+}
+
+function IconEdit({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+  );
+}
+
+function IconChart({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  );
+}
+
+function IconDownload({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function IconTrendingUp({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+  );
+}
+
+function IconCompare({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  );
+}
+
+function IconFileText({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function IconCircle({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+    </svg>
+  );
+}
+
+function IconBell({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    </svg>
+  );
 }

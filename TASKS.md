@@ -44,8 +44,8 @@
 
 ## Phase 3: Portfolio & Property Management
 
-### Task 3.1: Portfolio CRUD
-- [ ] Create portfolio list view
+### Task 3.1: Portfolio CRUD ✅
+- [x] Create portfolio list view
 - [ ] Implement portfolio creation form
 - [ ] Add portfolio editing functionality
 - [ ] Implement portfolio deletion
@@ -53,12 +53,17 @@
 - [ ] Create snapshot functionality
 
 ### Task 3.2: Property Management
-- [ ] Create property list view
+- [x] Create property list view
 - [ ] Build strategy-aware property forms
 - [ ] Implement conditional form rendering
 - [ ] Add property validation
 - [ ] Create property editing interface
 - [ ] Implement property deletion
+- [ ] Add property-level cashflow modeling
+- [ ] Create property modeling interface
+- [ ] Implement 30-year cashflow projections
+- [ ] Add strategy comparison functionality
+- [ ] Create property-level reports and charts
 
 ### Task 3.3: Loan Management
 - [ ] Create loan configuration interface
