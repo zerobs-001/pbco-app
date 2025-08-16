@@ -54,13 +54,13 @@
 
 ### Task 3.2: Property Management
 - [x] Create property list view
+- [x] Add property-level cashflow modeling status to dashboard
+- [x] Create property modeling interface design
 - [ ] Build strategy-aware property forms
 - [ ] Implement conditional form rendering
 - [ ] Add property validation
 - [ ] Create property editing interface
 - [ ] Implement property deletion
-- [ ] Add property-level cashflow modeling
-- [ ] Create property modeling interface
 - [ ] Implement 30-year cashflow projections
 - [ ] Add strategy comparison functionality
 - [ ] Create property-level reports and charts

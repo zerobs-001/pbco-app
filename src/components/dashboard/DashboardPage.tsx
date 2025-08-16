@@ -6,8 +6,8 @@ export default function DashboardPage() {
   return (
     <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
       <AppHeader />
-      <main className="mx-auto max-w-[1400px] aspect-[16/9] px-6 pb-8 pt-6">
-        <div className="flex h-full w-full flex-col gap-6 overflow-hidden rounded-2xl">
+      <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
+        <div className="flex flex-col gap-6">
           <PortfolioHeader />
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KpiCard title="Total Portfolio Value" value="$2.4M" accent="blue" helper="Across 3 properties" />
@@ -16,16 +16,18 @@ export default function DashboardPage() {
             <KpiCard title="Income Replacement Year" value="2032" accent="purple" helper="Projection based on plan" />
           </section>
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-6">
-            <div className="xl:col-span-2 h-[min(50vh,520px)] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+            <div className="xl:col-span-2 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
                 <h3 className="text-lg font-semibold">My Investment Portfolio</h3>
                 <button className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
                   <IconPlus className="h-4 w-4" /> Add Property
                 </button>
               </div>
-              <PropertyTable />
+              <div className="max-h-[600px] overflow-auto">
+                <PropertyTable />
+              </div>
             </div>
-            <div className="grid h-[min(50vh,520px)] grid-rows-2 gap-6">
+            <div className="flex flex-col gap-6">
               <PortfolioActions />
               <RecentActivity />
             </div>
@@ -204,35 +206,37 @@ function PropertyTable() {
 
 function PortfolioActions() {
   return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">Portfolio Actions</h3>
-      <div className="space-y-3">
-        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
-          <IconChart className="h-5 w-5 text-[#2563eb]" />
-          <div>
-            <div className="font-medium text-[#111827]">Generate Portfolio Report</div>
-            <div className="text-sm text-[#6b7280]">Run 30-year projections</div>
+    <div className="rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+      <div className="px-5 py-4 border-b border-[#e5e7eb]">
+        <h3 className="text-lg font-semibold">Portfolio Actions</h3>
+      </div>
+      <div className="p-5 space-y-3">
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm transition-shadow">
+          <IconChart className="h-5 w-5 text-[#2563eb] flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-[#111827] truncate">Generate Portfolio Report</div>
+            <div className="text-sm text-[#6b7280] truncate">Run 30-year projections</div>
           </div>
         </button>
-        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
-          <IconDownload className="h-5 w-5 text-[#059669]" />
-          <div>
-            <div className="font-medium text-[#111827]">Export Portfolio Data</div>
-            <div className="text-sm text-[#6b7280]">Download CSV/JSON</div>
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm transition-shadow">
+          <IconDownload className="h-5 w-5 text-[#059669] flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-[#111827] truncate">Export Portfolio Data</div>
+            <div className="text-sm text-[#6b7280] truncate">Download CSV/JSON</div>
           </div>
         </button>
-        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
-          <IconTrendingUp className="h-5 w-5 text-[#d97706]" />
-          <div>
-            <div className="font-medium text-[#111827]">View Income Timeline</div>
-            <div className="text-sm text-[#6b7280]">See replacement progression</div>
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm transition-shadow">
+          <IconTrendingUp className="h-5 w-5 text-[#d97706] flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-[#111827] truncate">View Income Timeline</div>
+            <div className="text-sm text-[#6b7280] truncate">See replacement progression</div>
           </div>
         </button>
-        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm">
-          <IconCompare className="h-5 w-5 text-[#7c3aed]" />
-          <div>
-            <div className="font-medium text-[#111827]">Compare Properties</div>
-            <div className="text-sm text-[#6b7280]">Side-by-side analysis</div>
+        <button className="flex w-full items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white p-3 text-left hover:shadow-sm transition-shadow">
+          <IconCompare className="h-5 w-5 text-[#7c3aed] flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-[#111827] truncate">Compare Properties</div>
+            <div className="text-sm text-[#6b7280] truncate">Side-by-side analysis</div>
           </div>
         </button>
       </div>
@@ -264,13 +268,17 @@ function RecentActivity() {
   };
 
   return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-      <div className="space-y-3">
+    <div className="rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+      <div className="px-5 py-4 border-b border-[#e5e7eb]">
+        <h3 className="text-lg font-semibold">Recent Activity</h3>
+      </div>
+      <div className="p-5 space-y-3">
         {activities.map((activity) => (
           <div key={activity.id} className="flex items-center gap-3">
-            {getActivityIcon(activity.type)}
-            <div className="flex-1 min-w-0">
+            <div className="flex-shrink-0">
+              {getActivityIcon(activity.type)}
+            </div>
+            <div className="min-w-0 flex-1">
               <div className="text-sm font-medium text-[#111827] truncate">{activity.action}</div>
               <div className="text-xs text-[#6b7280]">{activity.time}</div>
             </div>
