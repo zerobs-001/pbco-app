@@ -15,16 +15,16 @@ export default function Home() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link 
-              href="/auth"
+              href="/dashboard"
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
             >
-              Sign In
+              View Dashboard
             </Link>
             <Link 
-              href="/auth?mode=signup"
+              href="/auth"
               className="bg-white hover:bg-gray-50 text-blue-600 font-semibold py-3 px-8 rounded-lg border-2 border-blue-600 transition-colors"
             >
-              Sign Up
+              Sign In
             </Link>
           </div>
 
