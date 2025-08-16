@@ -183,13 +183,13 @@ function PropertyTable() {
               <td className="px-5 py-4">
                 <div className="flex gap-2">
                   {property.status === "needs_modeling" ? (
-                    <button className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
+                    <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
                       <IconPlay className="h-3 w-3" /> Model
-                    </button>
+                    </a>
                   ) : (
-                    <button className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
+                    <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
                       <IconEye className="h-3 w-3" /> View
-                    </button>
+                    </a>
                   )}
                   <button className="inline-flex items-center gap-1 rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-xs font-medium text-[#111827] hover:bg-[#f9fafb]">
                     <IconEdit className="h-3 w-3" /> Edit
