@@ -27,9 +27,9 @@
 
 ## Phase 2: Authentication & User Management
 
-### Task 2.1: Authentication System
-- [ ] Implement sign up flow
-- [ ] Implement sign in flow
+### Task 2.1: Authentication System ✅
+- [x] Implement sign up flow
+- [x] Implement sign in flow
 - [ ] Set up JWT session management
 - [ ] Add password reset functionality
 - [ ] Implement optional 2FA (TOTP)
