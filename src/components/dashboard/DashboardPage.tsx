@@ -55,9 +55,9 @@ function PortfolioHeader() {
         <p className="text-[#6b7280] mt-1">Manage your properties and track cashflow projections</p>
       </div>
       <div className="flex gap-3">
-        <button className="inline-flex items-center gap-2 rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8] focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(37,99,235,0.2)]">
+        <a href="/property/new" className="inline-flex items-center gap-2 rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8] focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(37,99,235,0.2)]">
           <IconPlus className="h-4 w-4" /> Add Property
-        </button>
+        </a>
         <button className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
           <IconSettings className="h-4 w-4" /> Settings
         </button>
