@@ -254,13 +254,23 @@ export class PropertyService {
    * Update property cashflow status
    */
   async updateCashflowStatus(propertyId: string, status: 'not_modeled' | 'modeling' | 'modeled' | 'error'): Promise<void> {
-    const { error } = await this.supabase
-      .from('properties')
-      .update({ cashflow_status: status })
-      .eq('id', propertyId);
+    try {
+      const response = await fetch(`/api/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cashflow_status: status
+        }),
+      });
 
-    if (error) {
-      throw new Error(`Failed to update cashflow status: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to update cashflow status: ${errorData.error || response.statusText}`);
+      }
+    } catch (error) {
+      throw new Error(`Failed to update cashflow status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

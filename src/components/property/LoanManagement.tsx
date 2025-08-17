@@ -100,7 +100,6 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   const handleSaveLoan = async () => {
     try {
-      alert('🚨 DEBUG: handleSaveLoan called!'); // Debug alert
       console.log('🔄 LoanManagement: Starting loan save process');
       console.log('📝 Form data:', formData);
       console.log('📊 Current loans:', loans);
