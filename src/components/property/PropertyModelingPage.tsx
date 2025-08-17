@@ -163,16 +163,22 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       const propertyValue = propertyData.currentValue * Math.pow(1 + assumptions.capitalGrowthRate / 100, yearIndex);
       
       // Calculate loan payment (simplified)
-      const monthlyRate = loanData.interestRate / 100 / 12;
-      const totalPayments = loanData.termYears * 12;
-      const monthlyPayment = (loanData.principalAmount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
-                           (Math.pow(1 + monthlyRate, totalPayments) - 1);
-      const annualLoanPayment = monthlyPayment * 12;
+      let annualLoanPayment = 0;
+      let annualInterest = 0;
+      let annualPrincipal = 0;
       
-      // Update loan balance
-      const annualInterest = currentLoanBalance * (loanData.interestRate / 100);
-      const annualPrincipal = annualLoanPayment - annualInterest;
-      currentLoanBalance = Math.max(0, currentLoanBalance - annualPrincipal);
+      if (loanData.principalAmount > 0 && loanData.interestRate > 0) {
+        const monthlyRate = loanData.interestRate / 100 / 12;
+        const totalPayments = loanData.termYears * 12;
+        const monthlyPayment = (loanData.principalAmount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
+                             (Math.pow(1 + monthlyRate, totalPayments) - 1);
+        annualLoanPayment = monthlyPayment * 12;
+        
+        // Update loan balance
+        annualInterest = currentLoanBalance * (loanData.interestRate / 100);
+        annualPrincipal = annualLoanPayment - annualInterest;
+        currentLoanBalance = Math.max(0, currentLoanBalance - annualPrincipal);
+      }
       
       // Calculate tax liability (simplified)
       const taxableIncome = rentIncome - expenses - annualInterest;
@@ -212,7 +218,17 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     projectionsLength: projections.length,
     first10Years: projections.slice(0, 10).map(p => ({ year: p.year, cashflow: p.netCashflow })),
     maxCashflow: Math.max(...projections.slice(0, 10).map(p => Math.abs(p.netCashflow))),
-    breakEvenYear
+    breakEvenYear,
+    propertyData: {
+      currentValue: propertyData.currentValue,
+      annualRent: property?.annual_rent,
+      annualExpenses: property?.annual_expenses
+    },
+    loanData: {
+      principalAmount: loanData.principalAmount,
+      interestRate: loanData.interestRate
+    },
+    assumptions
   });
 
   // Strategy comparisons

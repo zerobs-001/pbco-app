@@ -19,7 +19,7 @@ export async function GET(
     const resolvedParams = await params;
     const propertyId = resolvedParams.id;
 
-    console.log('🔍 Fetching property with ID:', propertyId);
+    console.log('🔍 API: Fetching property with ID:', propertyId);
 
     // Fetch property using service role (bypasses RLS)
     const { data: property, error } = await supabase
