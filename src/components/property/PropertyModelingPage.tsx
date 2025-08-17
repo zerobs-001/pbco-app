@@ -377,52 +377,52 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
         <div className="flex items-end justify-between h-48 gap-2">
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500" style={{ height: '20%' }}></div>
+            <div className="w-full bg-red-500 border border-black" style={{ height: '80px' }}></div>
             <div className="text-xs mt-2">2024</div>
             <div className="text-xs">-$12K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500" style={{ height: '18%' }}></div>
+            <div className="w-full bg-red-500 border border-black" style={{ height: '70px' }}></div>
             <div className="text-xs mt-2">2025</div>
             <div className="text-xs">-$10K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500" style={{ height: '15%' }}></div>
+            <div className="w-full bg-red-500 border border-black" style={{ height: '60px' }}></div>
             <div className="text-xs mt-2">2026</div>
             <div className="text-xs">-$8K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500" style={{ height: '12%' }}></div>
+            <div className="w-full bg-red-500 border border-black" style={{ height: '50px' }}></div>
             <div className="text-xs mt-2">2027</div>
             <div className="text-xs">-$6K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500" style={{ height: '8%' }}></div>
+            <div className="w-full bg-red-500 border border-black" style={{ height: '30px' }}></div>
             <div className="text-xs mt-2">2028</div>
             <div className="text-xs">-$3K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500" style={{ height: '5%' }}></div>
+            <div className="w-full bg-green-500 border border-black" style={{ height: '20px' }}></div>
             <div className="text-xs mt-2">2029</div>
             <div className="text-xs">+$2K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500" style={{ height: '15%' }}></div>
+            <div className="w-full bg-green-500 border border-black" style={{ height: '60px' }}></div>
             <div className="text-xs mt-2">2030</div>
             <div className="text-xs">+$8K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500" style={{ height: '25%' }}></div>
+            <div className="w-full bg-green-500 border border-black" style={{ height: '100px' }}></div>
             <div className="text-xs mt-2">2031</div>
             <div className="text-xs">+$12K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500" style={{ height: '35%' }}></div>
+            <div className="w-full bg-green-500 border border-black" style={{ height: '140px' }}></div>
             <div className="text-xs mt-2">2032</div>
             <div className="text-xs">+$16K</div>
           </div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500" style={{ height: '40%' }}></div>
+            <div className="w-full bg-green-500 border border-black" style={{ height: '160px' }}></div>
             <div className="text-xs mt-2">2033</div>
             <div className="text-xs">+$20K</div>
           </div>
