@@ -76,6 +76,16 @@ export async function GET(
         start_date: property.loans[0].start_date,
         created_at: property.loans[0].created_at,
         updated_at: property.loans[0].updated_at
+      } : propertyData.loan ? {
+        id: `embedded_${property.id}`,
+        property_id: property.id,
+        type: propertyData.loan.type,
+        principal_amount: propertyData.loan.principal_amount,
+        interest_rate: propertyData.loan.interest_rate,
+        term_years: propertyData.loan.term_years,
+        start_date: propertyData.loan.start_date,
+        created_at: propertyData.loan.created_at,
+        updated_at: propertyData.loan.updated_at
       } : undefined
     };
 
@@ -179,6 +189,16 @@ export async function PATCH(
         start_date: property.loans[0].start_date,
         created_at: property.loans[0].created_at,
         updated_at: property.loans[0].updated_at
+      } : propertyData.loan ? {
+        id: `embedded_${property.id}`,
+        property_id: property.id,
+        type: propertyData.loan.type,
+        principal_amount: propertyData.loan.principal_amount,
+        interest_rate: propertyData.loan.interest_rate,
+        term_years: propertyData.loan.term_years,
+        start_date: propertyData.loan.start_date,
+        created_at: propertyData.loan.created_at,
+        updated_at: propertyData.loan.updated_at
       } : undefined
     };
 
