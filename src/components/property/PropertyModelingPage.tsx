@@ -788,7 +788,7 @@ function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave
         <label className="block text-xs font-medium text-[#6b7280] mb-1">Property Name</label>
         <input
           type="text"
-          value={formData.name}
+          value={formData.name || ''}
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
         />
@@ -796,7 +796,7 @@ function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave
       <div>
         <label className="block text-xs font-medium text-[#6b7280] mb-1">Type</label>
         <select
-          value={formData.type}
+          value={formData.type || ''}
           onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
           className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
         >
@@ -810,7 +810,7 @@ function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave
         <label className="block text-xs font-medium text-[#6b7280] mb-1">Address</label>
         <input
           type="text"
-          value={formData.address}
+          value={formData.address || ''}
           onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
           className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
         />
@@ -820,7 +820,7 @@ function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave
           <label className="block text-xs font-medium text-[#6b7280] mb-1">Purchase Price</label>
           <input
             type="number"
-            value={formData.purchasePrice}
+            value={formData.purchasePrice || 0}
             onChange={(e) => setFormData(prev => ({ ...prev, purchasePrice: parseFloat(e.target.value) || 0 }))}
             className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           />
@@ -829,7 +829,7 @@ function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave
           <label className="block text-xs font-medium text-[#6b7280] mb-1">Current Value</label>
           <input
             type="number"
-            value={formData.currentValue}
+            value={formData.currentValue || 0}
             onChange={(e) => setFormData(prev => ({ ...prev, currentValue: parseFloat(e.target.value) || 0 }))}
             className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           />
@@ -889,7 +889,7 @@ function AssumptionsForm({ assumptions, onAssumptionChange }: {
         <label className="block text-sm font-medium text-[#111827] mb-1">Rent Growth Rate (%)</label>
         <input
           type="number"
-          value={assumptions.rentGrowthRate}
+          value={assumptions.rentGrowthRate || 0}
           onChange={(e) => onAssumptionChange('rentGrowthRate', parseFloat(e.target.value) || 0)}
           className="w-full px-3 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           step="0.1"
@@ -900,7 +900,7 @@ function AssumptionsForm({ assumptions, onAssumptionChange }: {
         <label className="block text-sm font-medium text-[#111827] mb-1">Capital Growth Rate (%)</label>
         <input
           type="number"
-          value={assumptions.capitalGrowthRate}
+          value={assumptions.capitalGrowthRate || 0}
           onChange={(e) => onAssumptionChange('capitalGrowthRate', parseFloat(e.target.value) || 0)}
           className="w-full px-3 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           step="0.1"
@@ -911,7 +911,7 @@ function AssumptionsForm({ assumptions, onAssumptionChange }: {
         <label className="block text-sm font-medium text-[#111827] mb-1">Expense Inflation Rate (%)</label>
         <input
           type="number"
-          value={assumptions.expenseInflationRate}
+          value={assumptions.expenseInflationRate || 0}
           onChange={(e) => onAssumptionChange('expenseInflationRate', parseFloat(e.target.value) || 0)}
           className="w-full px-3 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           step="0.1"
@@ -922,7 +922,7 @@ function AssumptionsForm({ assumptions, onAssumptionChange }: {
         <label className="block text-sm font-medium text-[#111827] mb-1">Tax Rate (%)</label>
         <input
           type="number"
-          value={assumptions.taxRate}
+          value={assumptions.taxRate || 0}
           onChange={(e) => onAssumptionChange('taxRate', parseFloat(e.target.value) || 0)}
           className="w-full px-3 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           step="0.1"
@@ -933,7 +933,7 @@ function AssumptionsForm({ assumptions, onAssumptionChange }: {
         <label className="block text-sm font-medium text-[#111827] mb-1">Discount Rate (%)</label>
         <input
           type="number"
-          value={assumptions.discountRate}
+          value={assumptions.discountRate || 0}
           onChange={(e) => onAssumptionChange('discountRate', parseFloat(e.target.value) || 0)}
           className="w-full px-3 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           step="0.1"
