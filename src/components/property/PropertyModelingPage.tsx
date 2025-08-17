@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 
 // Types
 interface PropertyData {
@@ -148,6 +148,14 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       return npv + projection.netCashflow / discountFactor;
     }, 0);
   }, [projections, assumptions.discountRate]);
+
+  // Debug: Log chart data
+  console.log('Chart Debug:', {
+    projectionsLength: projections.length,
+    first10Years: projections.slice(0, 10).map(p => ({ year: p.year, cashflow: p.netCashflow })),
+    maxCashflow: Math.max(...projections.slice(0, 10).map(p => Math.abs(p.netCashflow))),
+    breakEvenYear
+  });
 
   // Strategy comparisons
   const strategyComparisons = useMemo((): StrategyComparison[] => {
@@ -354,23 +362,63 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
 }
 
 function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projections: YearlyProjection[]; breakEvenYear: number; height?: number }) {
-  // Ensure we have data to display
-  if (!projections || projections.length === 0) {
+  const [isClient, setIsClient] = useState(false);
+
+  // Only render chart on client to prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Show loading state on server
+  if (!isClient) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#6b7280] border border-[#e5e7eb] rounded-lg">
-        <p>No projection data available</p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-[#6b7280]">Annual Cashflow Projection (First 10 Years)</p>
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+              <span>Positive</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-gray-400 rounded"></div>
+              <span>Negative</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
+          <div className="flex items-center justify-center h-48">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              <p className="text-sm text-[#6b7280]">Loading chart...</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Get first 10 years of data
-  const chartData = projections.slice(0, 10);
-  const maxCashflow = Math.max(...chartData.map(p => Math.abs(p.netCashflow)));
+  // TEST: Use static data first to verify chart rendering works
+  const testData = [
+    { year: 2024, cashflow: -12000 },
+    { year: 2025, cashflow: -10500 },
+    { year: 2026, cashflow: -8500 },
+    { year: 2027, cashflow: -6000 },
+    { year: 2028, cashflow: -3000 },
+    { year: 2029, cashflow: 2000 },
+    { year: 2030, cashflow: 8500 },
+    { year: 2031, cashflow: 12000 },
+    { year: 2032, cashflow: 15800 },
+    { year: 2033, cashflow: 19500 },
+  ];
+
+  const maxCashflow = Math.max(...testData.map(d => Math.abs(d.cashflow)));
   
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#6b7280]">Annual Cashflow Projection (First 10 Years)</p>
+        <p className="text-sm text-[#6b7280]">TEST: Static Cashflow Chart (First 10 Years)</p>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-blue-500 rounded"></div>
@@ -383,18 +431,17 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
         </div>
       </div>
       
-      {/* Simple chart */}
+      {/* Chart */}
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
         <div className="flex items-end justify-between h-48 gap-2">
-          {chartData.map((projection, index) => {
-            const cashflow = projection.netCashflow;
+          {testData.map((data, index) => {
+            const cashflow = data.cashflow;
             const isPositive = cashflow >= 0;
             const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
-            // Round to 1 decimal place to prevent hydration mismatch
-            const barHeight = Math.max(Math.round(heightPercent * 10) / 10, 5); // Minimum 5% height
+            const barHeight = Math.max(heightPercent, 5); // Minimum 5% height
             
             return (
-              <div key={projection.year} className="flex flex-col items-center flex-1">
+              <div key={data.year} className="flex flex-col items-center flex-1">
                 {/* Bar */}
                 <div 
                   className={`w-full rounded-t transition-all duration-200 ${
@@ -405,7 +452,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                 
                 {/* Year label */}
                 <div className="text-xs text-[#6b7280] mt-2 text-center">
-                  {projection.year}
+                  {data.year}
                 </div>
                 
                 {/* Value label */}
@@ -420,23 +467,23 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       
       {/* Summary */}
       <div className="text-center text-sm text-[#6b7280]">
-        Break-even achieved in {breakEvenYear} • 30-year projection shows {projections.filter(p => p.netCashflow > 0).length} positive years
+        TEST: Static data showing negative to positive cashflow transition
       </div>
       
       {/* Data summary */}
       <div className="text-xs text-[#6b7280] bg-[#f9fafb] p-3 rounded">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="font-medium">Chart Summary:</p>
-            <p>• {projections.length} total years</p>
+            <p className="font-medium">Test Chart Summary:</p>
+            <p>• 10 test years</p>
             <p>• Max cashflow: ${(maxCashflow / 1000).toFixed(1)}K</p>
-            <p>• Break-even: {breakEvenYear}</p>
+            <p>• Break-even: ~2029</p>
           </div>
           <div>
-            <p className="font-medium">Sample Years:</p>
-            <p>• Year 1: ${(projections[0]?.netCashflow / 1000).toFixed(1)}K</p>
-            <p>• Year 5: ${(projections[4]?.netCashflow / 1000).toFixed(1)}K</p>
-            <p>• Year 10: ${(projections[9]?.netCashflow / 1000).toFixed(1)}K</p>
+            <p className="font-medium">Sample Values:</p>
+            <p>• Year 1: -$12.0K</p>
+            <p>• Year 5: -$3.0K</p>
+            <p>• Year 10: +$19.5K</p>
           </div>
         </div>
       </div>
