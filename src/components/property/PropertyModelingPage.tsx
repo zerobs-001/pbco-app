@@ -158,8 +158,8 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     let cumulativeCashflow = 0;
     let currentLoanBalance = loanData.principalAmount;
     // Get rent and expenses from property data or use defaults
-    let currentRent = property?.annual_rent || 45000; // Annual rent
-    let currentExpenses = property?.annual_expenses || 12000; // Annual expenses
+    let currentRent = property?.annual_rent || 0; // Annual rent
+    let currentExpenses = property?.annual_expenses || 0; // Annual expenses
 
     for (let year = 2024; year <= 2054; year++) {
       const yearIndex = year - 2024;
@@ -362,9 +362,9 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               </button>
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-[#2563eb] flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">JD</span>
+                  <span className="text-sm font-medium text-white">U</span>
                 </div>
-                <span className="hidden md:block text-sm font-medium text-[#111827]">John Doe</span>
+                <span className="hidden md:block text-sm font-medium text-[#111827]">User</span>
               </div>
             </div>
           </div>
@@ -508,6 +508,11 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold mb-4">Detailed Projections</h2>
               <YearlyBreakdownTable projections={projections.slice(0, 10)} />
+            </section>
+
+            {/* Key Milestones Timeline */}
+            <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <MilestonesTimeline milestones={calculatedMilestones} />
             </section>
           </div>
         </div>
@@ -695,14 +700,6 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
         </div>
       </div>
 
-      {/* Key Milestones Timeline */}
-      <MilestonesTimeline milestones={[
-        { name: 'Break-even', year: 2024, achieved: true, target: 0 },
-        { name: '25% of Rent', year: 2024, achieved: true, target: 6250 },
-        { name: '50% of Rent', year: 2024, achieved: true, target: 12500 },
-        { name: '75% of Rent', year: 2024, achieved: true, target: 18750 },
-        { name: '100% of Rent', year: 2024, achieved: true, target: 25000 }
-      ]} />
     </div>
   );
 }
