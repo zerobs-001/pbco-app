@@ -66,7 +66,11 @@ export async function GET(
       annual_rent: propertyData.annual_rent,
       annual_expenses: propertyData.annual_expenses,
       description: propertyData.description,
-      loan: property.loans?.[0] ? {
+      // Support for multiple loans (primary source: JSONB data)
+      loans: propertyData.loans || [],
+      // Backward compatibility - first loan
+      loan: propertyData.loans?.[0] ? propertyData.loans[0] 
+            : property.loans?.[0] ? {
         id: property.loans[0].id,
         property_id: property.loans[0].property_id,
         type: property.loans[0].type,
@@ -76,17 +80,17 @@ export async function GET(
         start_date: property.loans[0].start_date,
         created_at: property.loans[0].created_at,
         updated_at: property.loans[0].updated_at
-      } : propertyData.loan ? {
-        id: `embedded_${property.id}`,
-        property_id: property.id,
-        type: propertyData.loan.type,
-        principal_amount: propertyData.loan.principal_amount,
-        interest_rate: propertyData.loan.interest_rate,
-        term_years: propertyData.loan.term_years,
-        start_date: propertyData.loan.start_date,
-        created_at: propertyData.loan.created_at,
-        updated_at: propertyData.loan.updated_at
-      } : undefined
+              } : propertyData.loan ? {
+                id: `embedded_${property.id}`,
+                property_id: property.id,
+                type: propertyData.loan.type,
+                principal_amount: propertyData.loan.principal_amount,
+                interest_rate: propertyData.loan.interest_rate,
+                term_years: propertyData.loan.term_years,
+                start_date: propertyData.loan.start_date,
+                created_at: propertyData.loan.created_at,
+                updated_at: propertyData.loan.updated_at
+              } : undefined
     };
 
     return NextResponse.json({ property: mappedProperty });
@@ -201,27 +205,31 @@ export async function PATCH(
       annual_rent: propertyData.annual_rent,
       annual_expenses: propertyData.annual_expenses,
       description: propertyData.description,
-      loan: property.loans?.[0] ? {
-        id: property.loans[0].id,
-        property_id: property.loans[0].property_id,
-        type: property.loans[0].type,
-        principal_amount: property.loans[0].principal_amount,
-        interest_rate: property.loans[0].interest_rate,
-        term_years: property.loans[0].term_years,
-        start_date: property.loans[0].start_date,
-        created_at: property.loans[0].created_at,
-        updated_at: property.loans[0].updated_at
-      } : propertyData.loan ? {
-        id: `embedded_${property.id}`,
-        property_id: property.id,
-        type: propertyData.loan.type,
-        principal_amount: propertyData.loan.principal_amount,
-        interest_rate: propertyData.loan.interest_rate,
-        term_years: propertyData.loan.term_years,
-        start_date: propertyData.loan.start_date,
-        created_at: propertyData.loan.created_at,
-        updated_at: propertyData.loan.updated_at
-      } : undefined
+      // Support for multiple loans (primary source: JSONB data)
+      loans: propertyData.loans || [],
+      // Backward compatibility - first loan
+      loan: propertyData.loans?.[0] ? propertyData.loans[0] 
+            : property.loans?.[0] ? {
+                id: property.loans[0].id,
+                property_id: property.loans[0].property_id,
+                type: property.loans[0].type,
+                principal_amount: property.loans[0].principal_amount,
+                interest_rate: property.loans[0].interest_rate,
+                term_years: property.loans[0].term_years,
+                start_date: property.loans[0].start_date,
+                created_at: property.loans[0].created_at,
+                updated_at: property.loans[0].updated_at
+              } : propertyData.loan ? {
+                id: `embedded_${property.id}`,
+                property_id: property.id,
+                type: propertyData.loan.type,
+                principal_amount: propertyData.loan.principal_amount,
+                interest_rate: propertyData.loan.interest_rate,
+                term_years: propertyData.loan.term_years,
+                start_date: propertyData.loan.start_date,
+                created_at: propertyData.loan.created_at,
+                updated_at: propertyData.loan.updated_at
+              } : undefined
     };
 
     return NextResponse.json({ property: mappedProperty });
