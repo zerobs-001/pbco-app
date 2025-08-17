@@ -398,23 +398,33 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       
       {/* Chart */}
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
-        <div className="flex items-end justify-between h-48 gap-2">
+        <div className="flex items-center justify-between h-48 gap-2 relative">
+          {/* X-axis line */}
+          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 border-t border-gray-300"></div>
+          
           {chartData.map((projection, index) => {
             const cashflow = projection.netCashflow;
             const isPositive = cashflow >= 0;
             const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
-            // Convert percentage to pixels (max 160px height)
-            const barHeight = Math.max((heightPercent / 100) * 160, 10); // Minimum 10px height
+            // Convert percentage to pixels and round to prevent hydration mismatch
+            const barHeight = Math.max(Math.round((heightPercent / 100) * 80), 5); // Max 80px, min 5px
             
             return (
-              <div key={projection.year} className="flex flex-col items-center flex-1">
-                {/* Bar */}
-                <div 
-                  className={`w-full rounded-t transition-all duration-200 ${
-                    isPositive ? 'bg-blue-500' : 'bg-gray-400'
-                  }`}
-                  style={{ height: `${barHeight}px` }}
-                ></div>
+              <div key={projection.year} className="flex flex-col items-center flex-1 relative">
+                {/* Bar container positioned relative to x-axis */}
+                <div className="flex flex-col items-center" style={{ 
+                  transform: isPositive ? 'translateY(-50%)' : 'translateY(50%)',
+                  marginTop: isPositive ? '0' : `${barHeight}px`,
+                  marginBottom: isPositive ? `${barHeight}px` : '0'
+                }}>
+                  {/* Bar */}
+                  <div 
+                    className={`w-full rounded-t transition-all duration-200 ${
+                      isPositive ? 'bg-blue-500' : 'bg-gray-400'
+                    }`}
+                    style={{ height: `${barHeight}px` }}
+                  ></div>
+                </div>
                 
                 {/* Year label */}
                 <div className="text-xs text-[#6b7280] mt-2 text-center">
