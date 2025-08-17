@@ -4,26 +4,50 @@
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create custom types
-CREATE TYPE user_role AS ENUM ('client', 'admin');
-CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
-CREATE TYPE property_type AS ENUM (
-  'residential_house',
-  'residential_unit', 
-  'commercial_office',
-  'commercial_retail',
-  'commercial_industrial',
-  'mixed_use'
-);
-CREATE TYPE investment_strategy AS ENUM (
-  'buy_hold',
-  'manufacture_equity',
-  'value_add_commercial'
-);
-CREATE TYPE loan_type AS ENUM ('interest_only', 'principal_interest');
+-- Create custom types (ignore if already exist)
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('client', 'admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE property_type AS ENUM (
+      'residential_house',
+      'residential_unit', 
+      'commercial_office',
+      'commercial_retail',
+      'commercial_industrial',
+      'mixed_use'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE investment_strategy AS ENUM (
+      'buy_hold',
+      'manufacture_equity',
+      'value_add_commercial'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE loan_type AS ENUM ('interest_only', 'principal_interest');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
   name TEXT,
@@ -34,7 +58,7 @@ CREATE TABLE public.users (
 );
 
 -- User profiles table
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE PRIMARY KEY,
   status user_status DEFAULT 'active',
   notes TEXT,
@@ -44,7 +68,7 @@ CREATE TABLE public.profiles (
 );
 
 -- Portfolios table
-CREATE TABLE public.portfolios (
+CREATE TABLE IF NOT EXISTS public.portfolios (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -55,7 +79,7 @@ CREATE TABLE public.portfolios (
 );
 
 -- Properties table
-CREATE TABLE public.properties (
+CREATE TABLE IF NOT EXISTS public.properties (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   portfolio_id UUID REFERENCES public.portfolios(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -72,7 +96,7 @@ CREATE TABLE public.properties (
 );
 
 -- Loans table
-CREATE TABLE public.loans (
+CREATE TABLE IF NOT EXISTS public.loans (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   property_id UUID REFERENCES public.properties(id) ON DELETE CASCADE NOT NULL,
   type loan_type NOT NULL,
@@ -86,7 +110,7 @@ CREATE TABLE public.loans (
 );
 
 -- Results table
-CREATE TABLE public.results (
+CREATE TABLE IF NOT EXISTS public.results (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   portfolio_id UUID REFERENCES public.portfolios(id) ON DELETE CASCADE NOT NULL,
   scenario TEXT DEFAULT 'single',
@@ -98,7 +122,7 @@ CREATE TABLE public.results (
 );
 
 -- Consents table
-CREATE TABLE public.consents (
+CREATE TABLE IF NOT EXISTS public.consents (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   version TEXT NOT NULL,
@@ -106,7 +130,7 @@ CREATE TABLE public.consents (
 );
 
 -- Audit logs table
-CREATE TABLE public.audit_logs (
+CREATE TABLE IF NOT EXISTS public.audit_logs (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   actor_user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
   action TEXT NOT NULL,
@@ -121,7 +145,7 @@ CREATE TABLE public.audit_logs (
 -- Reference data tables
 
 -- LMI reference table
-CREATE TABLE public.reference_lmi (
+CREATE TABLE IF NOT EXISTS public.reference_lmi (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   lender_class TEXT NOT NULL,
   lvr_min DECIMAL(5,4) NOT NULL,
@@ -136,7 +160,7 @@ CREATE TABLE public.reference_lmi (
 );
 
 -- Stamp duty reference table
-CREATE TABLE public.reference_stamp_duty (
+CREATE TABLE IF NOT EXISTS public.reference_stamp_duty (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   state TEXT NOT NULL,
   bracket_min DECIMAL(12,2) NOT NULL,
@@ -151,7 +175,7 @@ CREATE TABLE public.reference_stamp_duty (
 );
 
 -- Global defaults reference table
-CREATE TABLE public.reference_defaults (
+CREATE TABLE IF NOT EXISTS public.reference_defaults (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   key TEXT NOT NULL UNIQUE,
   value_json JSONB NOT NULL,
@@ -163,7 +187,7 @@ CREATE TABLE public.reference_defaults (
 );
 
 -- Cap rates reference table
-CREATE TABLE public.reference_cap_rates (
+CREATE TABLE IF NOT EXISTS public.reference_cap_rates (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   region TEXT NOT NULL,
   asset_type TEXT NOT NULL,
@@ -176,7 +200,7 @@ CREATE TABLE public.reference_cap_rates (
 );
 
 -- Reference data change log
-CREATE TABLE public.reference_change_log (
+CREATE TABLE IF NOT EXISTS public.reference_change_log (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   actor_user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
   ref_table TEXT NOT NULL,
@@ -187,38 +211,77 @@ CREATE TABLE public.reference_change_log (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_portfolios_user_id ON public.portfolios(user_id);
-CREATE INDEX idx_properties_portfolio_id ON public.properties(portfolio_id);
-CREATE INDEX idx_loans_property_id ON public.loans(property_id);
-CREATE INDEX idx_results_portfolio_id ON public.results(portfolio_id);
-CREATE INDEX idx_consents_user_id ON public.consents(user_id);
-CREATE INDEX idx_audit_logs_actor_user_id ON public.audit_logs(actor_user_id);
-CREATE INDEX idx_audit_logs_target ON public.audit_logs(target_type, target_id);
-CREATE INDEX idx_audit_logs_created_at ON public.audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_portfolios_user_id ON public.portfolios(user_id);
+CREATE INDEX IF NOT EXISTS idx_properties_portfolio_id ON public.properties(portfolio_id);
+CREATE INDEX IF NOT EXISTS idx_loans_property_id ON public.loans(property_id);
+CREATE INDEX IF NOT EXISTS idx_results_portfolio_id ON public.results(portfolio_id);
+CREATE INDEX IF NOT EXISTS idx_consents_user_id ON public.consents(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_user_id ON public.audit_logs(actor_user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON public.audit_logs(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at);
 
 -- Reference data indexes
-CREATE INDEX idx_reference_lmi_effective ON public.reference_lmi(effective_from, effective_to);
-CREATE INDEX idx_reference_stamp_duty_state_effective ON public.reference_stamp_duty(state, effective_from, effective_to);
-CREATE INDEX idx_reference_defaults_effective ON public.reference_defaults(effective_from, effective_to);
-CREATE INDEX idx_reference_cap_rates_effective ON public.reference_cap_rates(effective_from, effective_to);
+CREATE INDEX IF NOT EXISTS idx_reference_lmi_effective ON public.reference_lmi(effective_from, effective_to);
+CREATE INDEX IF NOT EXISTS idx_reference_stamp_duty_state_effective ON public.reference_stamp_duty(state, effective_from, effective_to);
+CREATE INDEX IF NOT EXISTS idx_reference_defaults_effective ON public.reference_defaults(effective_from, effective_to);
+CREATE INDEX IF NOT EXISTS idx_reference_cap_rates_effective ON public.reference_cap_rates(effective_from, effective_to);
 
 -- Row Level Security (RLS) Policies
 
--- Enable RLS on all tables
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.portfolios ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.loans ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.results ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.consents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+-- Enable RLS on all tables (ignore if already enabled)
+DO $$ BEGIN
+  ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.portfolios ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.loans ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.results ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.consents ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Users can only see their own data
-CREATE POLICY "Users can view own profile" ON public.users
+CREATE POLICY IF NOT EXISTS "Users can view own profile" ON public.users
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile" ON public.users
+CREATE POLICY IF NOT EXISTS "Users can update own profile" ON public.users
   FOR UPDATE USING (auth.uid() = id);
 
 -- Profiles policies
