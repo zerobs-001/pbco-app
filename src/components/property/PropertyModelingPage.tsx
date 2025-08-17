@@ -130,7 +130,9 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       purchaseDate: property.purchase_date,
       address: property.address || "",
       strategy: property.strategy,
-    };
+      annualRent: property.annual_rent,
+      annualExpenses: property.annual_expenses,
+    } as any;
   }, [property, propertyId]);
 
   // Loan data from property or defaults
@@ -325,6 +327,8 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
           address: updatedPropertyData.address,
           purchase_price: updatedPropertyData.purchasePrice,
           current_value: updatedPropertyData.currentValue,
+          annual_rent: (updatedPropertyData as any).annualRent,
+          annual_expenses: (updatedPropertyData as any).annualExpenses,
         }),
       });
 
@@ -902,6 +906,26 @@ function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave
             type="number"
             value={formData.currentValue || 0}
             onChange={(e) => setFormData(prev => ({ ...prev, currentValue: parseFloat(e.target.value) || 0 }))}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-1">Annual Rent</label>
+          <input
+            type="number"
+            value={(formData as any).annualRent || 0}
+            onChange={(e) => setFormData(prev => ({ ...prev, annualRent: parseFloat(e.target.value) || 0 } as any))}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-1">Annual Expenses</label>
+          <input
+            type="number"
+            value={(formData as any).annualExpenses || 0}
+            onChange={(e) => setFormData(prev => ({ ...prev, annualExpenses: parseFloat(e.target.value) || 0 } as any))}
             className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           />
         </div>
