@@ -390,7 +390,8 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
             const cashflow = projection.netCashflow;
             const isPositive = cashflow >= 0;
             const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
-            const barHeight = Math.max(heightPercent, 5); // Minimum 5% height
+            // Round to 1 decimal place to prevent hydration mismatch
+            const barHeight = Math.max(Math.round(heightPercent * 10) / 10, 5); // Minimum 5% height
             
             return (
               <div key={projection.year} className="flex flex-col items-center flex-1">
