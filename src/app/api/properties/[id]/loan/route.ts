@@ -32,56 +32,105 @@ export async function PUT(
     let loanResult;
     
     if (existingLoan) {
-      // Update existing loan
-      const { data, error } = await supabase
+      // Update existing loan - try different column name formats
+      console.log('Attempting to update existing loan with data:', loanData);
+      
+      const updateData = {
+        type: loanData.type,
+        principal_amount: loanData.principal_amount,
+        term_years: loanData.term_years,
+        start_date: loanData.start_date,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Try with camelCase first
+      const { data: data1, error: error1 } = await supabase
         .from('loans')
         .update({
-          type: loanData.type,
-          principal_amount: loanData.principal_amount,
-          interest_rate: loanData.interest_rate,
-          term_years: loanData.term_years,
-          start_date: loanData.start_date,
-          updated_at: new Date().toISOString()
+          ...updateData,
+          interestRate: loanData.interest_rate
         })
         .eq('property_id', propertyId)
         .select()
         .single();
 
-      if (error) {
-        console.error('Error updating loan:', error);
-        return NextResponse.json(
-          { error: `Failed to update loan: ${error.message}` },
-          { status: 500 }
-        );
+      if (!error1) {
+        loanResult = data1;
+        console.log('✅ Loan updated with camelCase:', loanResult);
+      } else {
+        console.log('CamelCase failed, trying snake_case:', error1.message);
+        
+        // Try with snake_case
+        const { data: data2, error: error2 } = await supabase
+          .from('loans')
+          .update({
+            ...updateData,
+            interest_rate: loanData.interest_rate
+          })
+          .eq('property_id', propertyId)
+          .select()
+          .single();
+          
+        if (!error2) {
+          loanResult = data2;
+          console.log('✅ Loan updated with snake_case:', loanResult);
+        } else {
+          console.error('Both formats failed for update:', error2);
+          return NextResponse.json(
+            { error: `Failed to update loan: ${error2.message}` },
+            { status: 500 }
+          );
+        }
       }
-
-      loanResult = data;
-      console.log('✅ Loan updated:', loanResult);
     } else {
-      // Create new loan
-      const { data, error } = await supabase
+      // Create new loan - try different column name formats
+      console.log('Attempting to create new loan with data:', loanData);
+      
+      const insertData = {
+        property_id: propertyId,
+        type: loanData.type,
+        principal_amount: loanData.principal_amount,
+        term_years: loanData.term_years,
+        start_date: loanData.start_date
+      };
+      
+      // Try with camelCase first
+      const { data: data1, error: error1 } = await supabase
         .from('loans')
         .insert({
-          property_id: propertyId,
-          type: loanData.type,
-          principal_amount: loanData.principal_amount,
-          interest_rate: loanData.interest_rate,
-          term_years: loanData.term_years,
-          start_date: loanData.start_date
+          ...insertData,
+          interestRate: loanData.interest_rate
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating loan:', error);
-        return NextResponse.json(
-          { error: `Failed to create loan: ${error.message}` },
-          { status: 500 }
-        );
+      if (!error1) {
+        loanResult = data1;
+        console.log('✅ Loan created with camelCase:', loanResult);
+      } else {
+        console.log('CamelCase failed, trying snake_case:', error1.message);
+        
+        // Try with snake_case
+        const { data: data2, error: error2 } = await supabase
+          .from('loans')
+          .insert({
+            ...insertData,
+            interest_rate: loanData.interest_rate
+          })
+          .select()
+          .single();
+          
+        if (!error2) {
+          loanResult = data2;
+          console.log('✅ Loan created with snake_case:', loanResult);
+        } else {
+          console.error('Both formats failed for insert:', error2);
+          return NextResponse.json(
+            { error: `Failed to create loan: ${error2.message}` },
+            { status: 500 }
+          );
+        }
       }
-
-      loanResult = data;
-      console.log('✅ Loan created:', loanResult);
     }
 
     // Fetch updated property with loan data
