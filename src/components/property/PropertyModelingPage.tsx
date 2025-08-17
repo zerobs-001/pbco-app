@@ -4,6 +4,11 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { propertyService } from "@/lib/services/propertyService";
 import { Property, Loan } from "@/types";
 import LoanManagement from "./LoanManagement";
+import IncomeModeling from "./IncomeModeling";
+import OutgoingsModeling from "./OutgoingsModeling";
+import GrowthAssumptions from "./GrowthAssumptions";
+import DetailedProjections from "./DetailedProjections";
+import CollapsibleSection from "../ui/CollapsibleSection";
 
 // Safe number formatting to prevent hydration mismatches
 const formatNumber = (num: number, decimals: number = 0): string => {
@@ -30,9 +35,9 @@ interface PropertyData {
 }
 
 interface ModelingAssumptions {
-  rentGrowthRate: number;
-  capitalGrowthRate: number;
-  expenseInflationRate: number;
+  rentGrowth: number;
+  capitalGrowth: number;
+  inflationRate: number;
   taxRate: number;
   discountRate: number;
 }
@@ -68,34 +73,30 @@ interface Milestone {
 
 // Constants
 const DEFAULT_ASSUMPTIONS: ModelingAssumptions = {
-  rentGrowthRate: 3.5,
-  capitalGrowthRate: 4.0,
-  expenseInflationRate: 2.5,
+  rentGrowth: 3.5,
+  capitalGrowth: 4.0,
+  inflationRate: 2.5,
   taxRate: 30.0,
   discountRate: 8.0,
 };
 
-const PRESET_PROFILES = {
-  conservative: { rentGrowthRate: 2.5, capitalGrowthRate: 3.0, expenseInflationRate: 2.0, taxRate: 30.0, discountRate: 7.0 },
-  moderate: { rentGrowthRate: 3.5, capitalGrowthRate: 4.0, expenseInflationRate: 2.5, taxRate: 30.0, discountRate: 8.0 },
-  aggressive: { rentGrowthRate: 4.5, capitalGrowthRate: 5.5, expenseInflationRate: 3.0, taxRate: 30.0, discountRate: 9.0 },
-};
 
-const STRATEGIES = [
-  { id: "buy_hold", name: "Buy & Hold", description: "Long-term passive investment" },
-  { id: "manufacture_equity", name: "Manufacture Equity", description: "Value-add improvements" },
-  { id: "value_add_commercial", name: "Value-Add Commercial", description: "Commercial redevelopment" },
-];
+
+
 
 export default function PropertyModelingPage({ propertyId }: { propertyId: string }) {
   const [assumptions, setAssumptions] = useState<ModelingAssumptions>(DEFAULT_ASSUMPTIONS);
-  const [selectedStrategy, setSelectedStrategy] = useState("buy_hold");
   const [isEditingProperty, setIsEditingProperty] = useState(false);
-  const [isEditingLoan, setIsEditingLoan] = useState(false);
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  
+  // New state for income and outgoings modeling
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [incomeItems, setIncomeItems] = useState<any[]>([]);
+  const [totalOutgoings, setTotalOutgoings] = useState(0);
+  const [outgoingItems, setOutgoingItems] = useState<any[]>([]);
 
   // Client-side mount detection
   useEffect(() => {
@@ -529,6 +530,23 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       alert('Failed to update loan. Please try again.');
     }
   }, [propertyId, isPropertyFullyModeled]);
+
+  // Callback for income changes
+  const handleIncomeChange = useCallback((total: number, items: any[]) => {
+    setTotalIncome(total);
+    setIncomeItems(items);
+  }, []);
+
+  // Callback for outgoings changes
+  const handleOutgoingsChange = useCallback((total: number, items: any[]) => {
+    setTotalOutgoings(total);
+    setOutgoingItems(items);
+  }, []);
+
+  // Callback for assumptions changes
+  const handleAssumptionsChange = useCallback((newAssumptions: ModelingAssumptions) => {
+    setAssumptions(newAssumptions);
+  }, []);
 
   // Show loading state
   // Prevent hydration mismatch by not rendering until client-side
