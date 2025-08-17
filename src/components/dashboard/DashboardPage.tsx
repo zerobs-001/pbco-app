@@ -9,20 +9,20 @@ export default function DashboardPage() {
       <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
         <div className="flex flex-col gap-6">
           <PortfolioHeader />
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <KpiCard title="Total Portfolio Value" value="$2.4M" accent="blue" helper="Across 3 properties" />
-            <KpiCard title="Average LVR" value="65.2%" accent="orange" helper="Target ≤ 70%" />
-            <KpiCard title="Average DSCR" value="1.8x" accent="green" helper="> 1.25x is healthy" />
-            <KpiCard title="Income Replacement Year" value="2032" accent="purple" helper="Projection based on plan" />
-          </section>
+                        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <KpiCard title="Total Portfolio Value" value="$3.25M" accent="blue" helper="Across 5 properties" />
+                <KpiCard title="Average LVR" value="68.0%" accent="orange" helper="Target ≤ 70%" />
+                <KpiCard title="Average DSCR" value="1.9x" accent="green" helper="> 1.25x is healthy" />
+                <KpiCard title="Modeled Properties" value="3/5" accent="purple" helper="2 need modeling" />
+              </section>
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-6">
             <div className="xl:col-span-2 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
-                <h3 className="text-lg font-semibold">My Investment Portfolio</h3>
-                <button className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
-                  <IconPlus className="h-4 w-4" /> Add Property
-                </button>
-              </div>
+                                <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
+                    <h3 className="text-lg font-semibold">My Investment Portfolio</h3>
+                    <a href="/property/new" className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
+                      <IconPlus className="h-4 w-4" /> Add Property
+                    </a>
+                  </div>
               <div className="max-h-[600px] overflow-auto">
                 <PropertyTable />
               </div>
@@ -79,45 +79,79 @@ function KpiCard({ title, value, accent, helper }: { title: string; value: strin
   );
 }
 
-function PropertyTable() {
-  const properties = [
-    {
-      id: "1",
-      name: "Sydney House",
-      type: "Residential",
-      value: "$850K",
-      lvr: "68%",
-      dscr: "1.9x",
-      status: "modeled" as const,
-      cashflow: "+$12K/yr",
-      breakEven: "2028",
-      strategy: "Buy & Hold",
-    },
-    {
-      id: "2",
-      name: "Melbourne Unit",
-      type: "Residential",
-      value: "$620K",
-      lvr: "62%",
-      dscr: "2.1x",
-      status: "modeled" as const,
-      cashflow: "+$8K/yr",
-      breakEven: "2030",
-      strategy: "Buy & Hold",
-    },
-    {
-      id: "3",
-      name: "Brisbane Office",
-      type: "Commercial",
-      value: "$480K",
-      lvr: "70%",
-      dscr: "1.7x",
-      status: "needs_modeling" as const,
-      cashflow: "Not modeled",
-      breakEven: "N/A",
-      strategy: "Value-Add",
-    },
-  ];
+    function PropertyTable() {
+      const properties = [
+        {
+          id: "1",
+          name: "Sydney House",
+          type: "Residential House",
+          value: "$920K",
+          lvr: "68%",
+          dscr: "1.9x",
+          status: "modeled" as const,
+          cashflow: "+$12K/yr",
+          breakEven: "2028",
+          strategy: "Buy & Hold",
+          address: "123 Sydney Street, Sydney NSW 2000",
+          purchaseDate: "2023-01-15",
+        },
+        {
+          id: "2",
+          name: "Melbourne Unit",
+          type: "Residential Unit",
+          value: "$680K",
+          lvr: "62%",
+          dscr: "2.1x",
+          status: "modeled" as const,
+          cashflow: "+$8K/yr",
+          breakEven: "2030",
+          strategy: "Buy & Hold",
+          address: "456 Collins Street, Melbourne VIC 3000",
+          purchaseDate: "2023-06-20",
+        },
+        {
+          id: "3",
+          name: "Brisbane Office",
+          type: "Commercial Office",
+          value: "$520K",
+          lvr: "70%",
+          dscr: "1.7x",
+          status: "needs_modeling" as const,
+          cashflow: "Not modeled",
+          breakEven: "N/A",
+          strategy: "Value-Add",
+          address: "789 Queen Street, Brisbane QLD 4000",
+          purchaseDate: "2024-01-10",
+        },
+        {
+          id: "4",
+          name: "Perth Retail",
+          type: "Commercial Retail",
+          value: "$380K",
+          lvr: "65%",
+          dscr: "2.3x",
+          status: "modeled" as const,
+          cashflow: "+$15K/yr",
+          breakEven: "2026",
+          strategy: "Manufacture Equity",
+          address: "321 Hay Street, Perth WA 6000",
+          purchaseDate: "2023-09-15",
+        },
+        {
+          id: "5",
+          name: "Adelaide Industrial",
+          type: "Commercial Industrial",
+          value: "$750K",
+          lvr: "75%",
+          dscr: "1.5x",
+          status: "modeling" as const,
+          cashflow: "In progress",
+          breakEven: "N/A",
+          strategy: "Value-Add Commercial",
+          address: "147 Port Road, Adelaide SA 5000",
+          purchaseDate: "2024-02-28",
+        },
+      ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -159,46 +193,53 @@ function PropertyTable() {
             <th className="px-5 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#e5e7eb]">
-          {properties.map((property) => (
-            <tr key={property.id} className="hover:bg-[#f9fafb]">
-              <td className="px-5 py-4">
-                <div>
-                  <div className="font-medium text-[#111827]">{property.name}</div>
-                  <div className="text-sm text-[#6b7280]">
-                    Cashflow: {property.cashflow} | Break-even: {property.breakEven} | Strategy: {property.strategy}
-                  </div>
-                </div>
-              </td>
-              <td className="px-5 py-4 text-sm text-[#111827]">{property.type}</td>
-              <td className="px-5 py-4 text-sm text-[#111827]">{property.value}</td>
-              <td className="px-5 py-4 text-sm text-[#111827]">{property.lvr}</td>
-              <td className="px-5 py-4 text-sm text-[#111827]">{property.dscr}</td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(property.status)}
-                  <span className="text-sm text-[#111827]">{getStatusText(property.status)}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex gap-2">
-                  {property.status === "needs_modeling" ? (
-                    <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
-                      <IconPlay className="h-3 w-3" /> Model
-                    </a>
-                  ) : (
-                    <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
-                      <IconEye className="h-3 w-3" /> View
-                    </a>
-                  )}
-                  <button className="inline-flex items-center gap-1 rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-xs font-medium text-[#111827] hover:bg-[#f9fafb]">
-                    <IconEdit className="h-3 w-3" /> Edit
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+                    <tbody className="divide-y divide-[#e5e7eb]">
+              {properties.map((property) => (
+                <tr key={property.id} className="hover:bg-[#f9fafb]">
+                  <td className="px-5 py-4">
+                    <div>
+                      <div className="font-medium text-[#111827]">{property.name}</div>
+                      <div className="text-sm text-[#6b7280]">
+                        {property.address}
+                      </div>
+                      <div className="text-xs text-[#6b7280] mt-1">
+                        Purchased: {new Date(property.purchaseDate).toLocaleDateString()} | Strategy: {property.strategy}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-sm text-[#111827]">{property.type}</td>
+                  <td className="px-5 py-4 text-sm text-[#111827]">{property.value}</td>
+                  <td className="px-5 py-4 text-sm text-[#111827]">{property.lvr}</td>
+                  <td className="px-5 py-4 text-sm text-[#111827]">{property.dscr}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(property.status)}
+                      <span className="text-sm text-[#111827]">{getStatusText(property.status)}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex gap-2">
+                      {property.status === "needs_modeling" ? (
+                        <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
+                          <IconPlay className="h-3 w-3" /> Model
+                        </a>
+                      ) : property.status === "modeling" ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[#f59e0b] px-2 py-1 text-xs font-medium text-white">
+                          <IconClock className="h-3 w-3" /> In Progress
+                        </span>
+                      ) : (
+                        <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
+                          <IconEye className="h-3 w-3" /> View
+                        </a>
+                      )}
+                      <button className="inline-flex items-center gap-1 rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-xs font-medium text-[#111827] hover:bg-[#f9fafb]">
+                        <IconEdit className="h-3 w-3" /> Edit
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
       </table>
     </div>
   );
@@ -387,13 +428,21 @@ function IconEye({ className }: { className?: string }) {
   );
 }
 
-function IconEdit({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  );
-}
+  function IconEdit({ className }: { className?: string }) {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    );
+  }
+
+  function IconClock({ className }: { className?: string }) {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+  }
 
 function IconChart({ className }: { className?: string }) {
   return (
