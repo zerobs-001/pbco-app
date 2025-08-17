@@ -364,6 +364,11 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
 function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projections: YearlyProjection[]; breakEvenYear: number; height?: number }) {
   return (
     <div className="space-y-4">
+      {/* SUPER OBVIOUS TEST */}
+      <div className="bg-red-500 text-white p-4 text-center font-bold text-xl">
+        🎯 CHART COMPONENT IS RENDERING! 🎯
+      </div>
+      
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6b7280]">ULTRA SIMPLE TEST CHART</p>
       </div>
