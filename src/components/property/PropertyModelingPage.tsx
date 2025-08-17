@@ -540,30 +540,55 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
         </div>
       </div>
 
-      {/* Key Milestones */}
+      {/* Key Milestones Timeline */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+        <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center">
           <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
           Key Milestones
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">${(projections[0]?.netCashflow / 1000).toFixed(1)}K</div>
-            <div className="text-xs text-gray-500">Year 1</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">${(projections[9]?.netCashflow / 1000).toFixed(1)}K</div>
-            <div className="text-xs text-gray-500">Year 10</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">${(projections[19]?.netCashflow / 1000).toFixed(1)}K</div>
-            <div className="text-xs text-gray-500">Year 20</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">${(projections[29]?.netCashflow / 1000).toFixed(1)}K</div>
-            <div className="text-xs text-gray-500">Year 30</div>
+        
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-0 right-0 top-8 h-0.5 bg-gray-200"></div>
+          
+          <div className="flex justify-between items-start relative">
+            {/* Year 1 */}
+            <div className="flex flex-col items-center">
+              <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md mb-2"></div>
+              <div className="text-center">
+                <div className="text-sm font-bold text-gray-900">${(projections[0]?.netCashflow / 1000).toFixed(1)}K</div>
+                <div className="text-xs text-gray-500">Year 1</div>
+              </div>
+            </div>
+            
+            {/* Year 10 */}
+            <div className="flex flex-col items-center">
+              <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-md mb-2"></div>
+              <div className="text-center">
+                <div className="text-sm font-bold text-gray-900">${(projections[9]?.netCashflow / 1000).toFixed(1)}K</div>
+                <div className="text-xs text-gray-500">Year 10</div>
+              </div>
+            </div>
+            
+            {/* Year 20 */}
+            <div className="flex flex-col items-center">
+              <div className="w-4 h-4 bg-purple-500 rounded-full border-2 border-white shadow-md mb-2"></div>
+              <div className="text-center">
+                <div className="text-sm font-bold text-gray-900">${(projections[19]?.netCashflow / 1000).toFixed(1)}K</div>
+                <div className="text-xs text-gray-500">Year 20</div>
+              </div>
+            </div>
+            
+            {/* Year 30 */}
+            <div className="flex flex-col items-center">
+              <div className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-md mb-2"></div>
+              <div className="text-center">
+                <div className="text-sm font-bold text-gray-900">${(projections[29]?.netCashflow / 1000).toFixed(1)}K</div>
+                <div className="text-xs text-gray-500">Year 30</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
