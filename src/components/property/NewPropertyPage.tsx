@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { propertyService, CreatePropertyData, PropertyValidationResult } from "@/lib/services/propertyService";
+import { createClient } from '@/lib/supabase/client';
 
 interface PropertyFormData {
   name: string;
@@ -48,6 +49,7 @@ export default function NewPropertyPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState<PropertyValidationResult | null>(null);
+  const supabase = createClient();
   const [formData, setFormData] = useState<PropertyFormData>({
     name: "",
     type: "residential_house",
@@ -119,8 +121,9 @@ export default function NewPropertyPage() {
         description: formData.description
       };
 
-      // For now, create a temporary portfolio ID (we'll implement proper user management later)
-      const portfolioId = "temp-portfolio-" + Date.now();
+      // For now, create a temporary portfolio for testing
+      // In a real app, this would come from user authentication
+      const portfolioId = await createTemporaryPortfolio();
       
       // Create the property
       const property = await propertyService.createProperty(portfolioId, createData);
@@ -168,6 +171,17 @@ export default function NewPropertyPage() {
                          (Math.pow(1 + monthlyRate, totalPayments) - 1);
     const annualPayment = monthlyPayment * 12;
     return formData.annualRent / annualPayment;
+  };
+
+  const createTemporaryPortfolio = async (): Promise<string> => {
+    try {
+      // For now, we'll use a hardcoded portfolio ID that we know exists
+      // In a real app, this would come from user authentication
+      return 'e20784fd-d716-431a-a857-bfba1c661b6c'; // Test portfolio ID
+    } catch (error) {
+      console.error('Error in createTemporaryPortfolio:', error);
+      throw error;
+    }
   };
 
   return (
