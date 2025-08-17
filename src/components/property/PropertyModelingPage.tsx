@@ -398,28 +398,28 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       
       {/* Chart */}
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
-        <div className="flex items-center justify-between h-64 gap-1 relative overflow-x-auto">
+        <div className="flex items-center justify-between h-80 gap-1 relative overflow-x-auto pl-12">
           {/* Y-axis guides */}
-          <div className="absolute left-0 right-0 top-0 bottom-0 flex flex-col justify-between pointer-events-none">
+          <div className="absolute left-12 right-0 top-0 bottom-0 flex flex-col justify-between pointer-events-none">
             {[0, 25, 50, 75, 100].map((percent) => (
               <div key={percent} className="border-t border-gray-100" style={{ height: '1px' }}></div>
             ))}
           </div>
           
           {/* X-axis line */}
-          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 border-t border-gray-300"></div>
+          <div className="absolute left-12 right-0 top-1/2 transform -translate-y-1/2 border-t border-gray-300"></div>
           
           {/* Y-axis labels */}
-          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-gray-500 pointer-events-none">
-            <div>${(maxCashflow / 1000).toFixed(0)}K</div>
-            <div>${((maxCashflow * 0.75) / 1000).toFixed(0)}K</div>
-            <div>${((maxCashflow * 0.5) / 1000).toFixed(0)}K</div>
-            <div>${((maxCashflow * 0.25) / 1000).toFixed(0)}K</div>
-            <div>$0</div>
-            <div>-${((maxCashflow * 0.25) / 1000).toFixed(0)}K</div>
-            <div>-${((maxCashflow * 0.5) / 1000).toFixed(0)}K</div>
-            <div>-${((maxCashflow * 0.75) / 1000).toFixed(0)}K</div>
-            <div>-${(maxCashflow / 1000).toFixed(0)}K</div>
+          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-gray-500 pointer-events-none w-12">
+            <div className="text-right pr-2">${(maxCashflow / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">${((maxCashflow * 0.75) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">${((maxCashflow * 0.5) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">${((maxCashflow * 0.25) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">$0</div>
+            <div className="text-right pr-2">-${((maxCashflow * 0.25) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">-${((maxCashflow * 0.5) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">-${((maxCashflow * 0.75) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">-${(maxCashflow / 1000).toFixed(0)}K</div>
           </div>
           
           {chartData.map((projection, index) => {
@@ -427,7 +427,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
             const isPositive = cashflow >= 0;
             const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
             // Convert percentage to pixels and round to prevent hydration mismatch
-            const barHeight = Math.max(Math.round((heightPercent / 100) * 80), 3); // Max 80px, min 3px
+            const barHeight = Math.max(Math.round((heightPercent / 100) * 120), 3); // Max 120px, min 3px
             
             // Show year labels for every 5th year to avoid clutter
             const showYearLabel = index % 5 === 0 || index === chartData.length - 1;
@@ -454,10 +454,10 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                   <div>${(cashflow / 1000).toFixed(1)}K</div>
                 </div>
                 
-                {/* Year label - positioned above x-axis for negative, below for positive */}
+                {/* Year label - positioned below x-axis for negative, above for positive */}
                 {showYearLabel && (
                   <div className={`text-xs text-[#6b7280] text-center absolute ${
-                    isPositive ? 'bottom-0' : 'top-0'
+                    isPositive ? 'top-0' : 'bottom-0'
                   }`}>
                     {projection.year}
                   </div>
