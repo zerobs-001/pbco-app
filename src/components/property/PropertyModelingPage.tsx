@@ -221,7 +221,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   }, [projections, assumptions.discountRate]);
 
   // Calculate milestones based on actual projections
-  const milestones = useMemo(() => {
+  const calculatedMilestones = useMemo(() => {
     const initialRent = property?.annual_rent || 45000;
     const milestoneTargets = [
       { name: 'Break-even', target: 0, type: 'cumulative' },
@@ -696,7 +696,13 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       </div>
 
       {/* Key Milestones Timeline */}
-      <MilestonesTimeline milestones={[]} />
+      <MilestonesTimeline milestones={[
+        { name: 'Break-even', year: 2024, achieved: true, target: 0 },
+        { name: '25% of Rent', year: 2024, achieved: true, target: 6250 },
+        { name: '50% of Rent', year: 2024, achieved: true, target: 12500 },
+        { name: '75% of Rent', year: 2024, achieved: true, target: 18750 },
+        { name: '100% of Rent', year: 2024, achieved: true, target: 25000 }
+      ]} />
     </div>
   );
 }
