@@ -259,23 +259,31 @@ export class PropertyService {
    */
   private mapDatabasePropertyToType(dbProperty: any): Property {
     const propertyData = dbProperty.data || {};
+    console.log('🔍 Service: Mapping property data:', {
+      id: dbProperty.id,
+      hasData: !!dbProperty.data,
+      hasLoan: !!dbProperty.loan,
+      hasLoans: !!dbProperty.loans,
+      annual_rent: dbProperty.annual_rent,
+      propertyDataAnnualRent: propertyData.annual_rent
+    });
     return {
       id: dbProperty.id,
       portfolio_id: dbProperty.portfolio_id,
-      name: propertyData.name,
-      type: propertyData.type,
-      address: propertyData.address,
-      purchase_price: propertyData.purchase_price,
-      current_value: propertyData.current_value,
-      purchase_date: propertyData.purchase_date,
-      strategy: propertyData.strategy,
-      cashflow_status: propertyData.cashflow_status || 'not_modeled',
+      name: dbProperty.name || propertyData.name,
+      type: dbProperty.type || propertyData.type,
+      address: dbProperty.address || propertyData.address,
+      purchase_price: dbProperty.purchase_price || propertyData.purchase_price,
+      current_value: dbProperty.current_value || propertyData.current_value,
+      purchase_date: dbProperty.purchase_date || propertyData.purchase_date,
+      strategy: dbProperty.strategy || propertyData.strategy,
+      cashflow_status: dbProperty.cashflow_status || propertyData.cashflow_status || 'not_modeled',
       created_at: dbProperty.created_at,
       updated_at: dbProperty.updated_at,
-      // Financial data from JSONB
-      annual_rent: propertyData.annual_rent,
-      annual_expenses: propertyData.annual_expenses,
-      description: propertyData.description,
+      // Financial data - check both top level (from API) and nested data (from direct DB)
+      annual_rent: dbProperty.annual_rent || propertyData.annual_rent,
+      annual_expenses: dbProperty.annual_expenses || propertyData.annual_expenses,
+      description: dbProperty.description || propertyData.description,
       loan: dbProperty.loans?.[0] ? {
         id: dbProperty.loans[0].id,
         property_id: dbProperty.loans[0].property_id,
@@ -286,6 +294,16 @@ export class PropertyService {
         start_date: dbProperty.loans[0].start_date,
         created_at: dbProperty.loans[0].created_at,
         updated_at: dbProperty.loans[0].updated_at
+      } : dbProperty.loan ? {
+        id: dbProperty.loan.id || `embedded_${dbProperty.id}`,
+        property_id: dbProperty.loan.property_id || dbProperty.id,
+        type: dbProperty.loan.type,
+        principal_amount: dbProperty.loan.principal_amount,
+        interest_rate: dbProperty.loan.interest_rate,
+        term_years: dbProperty.loan.term_years,
+        start_date: dbProperty.loan.start_date,
+        created_at: dbProperty.loan.created_at,
+        updated_at: dbProperty.loan.updated_at
       } : undefined
     };
   }
