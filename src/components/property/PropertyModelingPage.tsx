@@ -487,79 +487,12 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
           </div>
         </div>
 
-        {/* Main Content - New Structure */}
-        <div className="space-y-6">
-          {/* KPI Cards and Charts Section - Always Visible */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* KPI Cards */}
-            <div className="lg:col-span-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <MetricCard 
-                  label="Break-even Year" 
-                  value={`${breakEvenYear}`}
-                  accent="blue"
-                  helper={`${breakEvenYear - 2024} years to positive cashflow`}
-                />
-                <MetricCard 
-                  label="Net Present Value" 
-                  value={formatCurrency(netPresentValue)} 
-                  accent="green"
-                  helper={`${assumptions.discountRate}% discount rate`}
-                />
-                <MetricCard 
-                  label="Annual Cashflow" 
-                  value={formatCurrency(projections[0]?.netCashflow || 0, true)} 
-                  accent="orange"
-                  helper="Year 1 projection"
-                />
-                <MetricCard 
-                  label="Property Value" 
-                  value={formatCurrency(propertyData.currentValue)} 
-                  accent="purple"
-                  helper="Current market value"
-                />
-              </div>
-            </div>
-
-            {/* Cashflow Chart */}
-            <div className="lg:col-span-4">
-              <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold mb-4">30-Year Cashflow Projection</h2>
-                <CashflowBarChart projections={projections} breakEvenYear={breakEvenYear} />
-              </section>
-            </div>
-
-            {/* Milestones Timeline */}
-            <div className="lg:col-span-4">
-              <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold mb-4">Key Milestones</h2>
-                <MilestonesTimeline milestones={calculatedMilestones} />
-              </section>
-            </div>
-          </div>
-
-          {/* Modeling Sections - All Collapsible */}
-          <div className="space-y-6">
-            {/* Income Modeling */}
-            <IncomeModeling 
-              onIncomeChange={handleIncomeChange}
-              initialIncome={property?.annual_rent || 0}
-            />
-
-            {/* Outgoings Modeling */}
-            <OutgoingsModeling 
-              onOutgoingsChange={handleOutgoingsChange}
-              initialExpenses={property?.annual_expenses || 0}
-            />
-
-            {/* Growth & Cashflow Assumptions */}
-            <GrowthAssumptions 
-              assumptions={assumptions}
-              onAssumptionsChange={handleAssumptionsChange}
-            />
-
-            {/* Property Details - Collapsible */}
-            <CollapsibleSection title="Property Details" defaultExpanded={false}>
+        {/* Main Content - Sidebar + Main Layout - Mobile Responsive */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+          {/* Left Sidebar - Controls */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Property Details */}
+            <CollapsibleSection title="Property Details" defaultExpanded={true}>
               <div className="flex items-center justify-between mb-4">
                 <div></div>
                 <button
@@ -583,18 +516,79 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               onLoansChange={handleLoansChange}
               propertyId={propertyId}
             />
+
+            {/* Growth & Cashflow Assumptions */}
+            <GrowthAssumptions 
+              assumptions={assumptions}
+              onAssumptionsChange={handleAssumptionsChange}
+            />
           </div>
 
-          {/* Detailed Projections - Bottom, Collapsible */}
-          <DetailedProjections 
-            propertyValue={propertyData.currentValue}
-            totalIncome={totalIncome || property?.annual_rent || 0}
-            totalOutgoings={totalOutgoings || property?.annual_expenses || 0}
-            loanAmount={aggregatedLoanData.totalPrincipal}
-            interestRate={loans.length > 0 ? loans[0].interest_rate : 0}
-            assumptions={assumptions}
-            totalCashInvested={propertyData.currentValue - aggregatedLoanData.totalPrincipal}
-          />
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* KPI Cards */}
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard 
+                label="Break-even Year" 
+                value={`${breakEvenYear}`}
+                accent="blue"
+                helper={`${breakEvenYear - 2024} years to positive cashflow`}
+              />
+              <MetricCard 
+                label="Net Present Value" 
+                value={formatCurrency(netPresentValue)} 
+                accent="green"
+                helper={`${assumptions.discountRate}% discount rate`}
+              />
+              <MetricCard 
+                label="Annual Cashflow" 
+                value={formatCurrency(projections[0]?.netCashflow || 0, true)} 
+                accent="orange"
+                helper="Year 1 projection"
+              />
+              <MetricCard 
+                label="Property Value" 
+                value={formatCurrency(propertyData.currentValue)} 
+                accent="purple"
+                helper="Current market value"
+              />
+            </section>
+
+            {/* Cashflow Chart */}
+            <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold mb-4">30-Year Cashflow Projection</h2>
+              <CashflowBarChart projections={projections} breakEvenYear={breakEvenYear} />
+            </section>
+
+            {/* Milestones Timeline */}
+            <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold mb-4">Key Milestones</h2>
+              <MilestonesTimeline milestones={calculatedMilestones} />
+            </section>
+
+            {/* Income Modeling */}
+            <IncomeModeling 
+              onIncomeChange={handleIncomeChange}
+              initialIncome={property?.annual_rent || 0}
+            />
+
+            {/* Outgoings Modeling */}
+            <OutgoingsModeling 
+              onOutgoingsChange={handleOutgoingsChange}
+              initialExpenses={property?.annual_expenses || 0}
+            />
+
+            {/* Detailed Projections - Bottom, Collapsible */}
+            <DetailedProjections 
+              propertyValue={propertyData.currentValue}
+              totalIncome={totalIncome || property?.annual_rent || 0}
+              totalOutgoings={totalOutgoings || property?.annual_expenses || 0}
+              loanAmount={aggregatedLoanData.totalPrincipal}
+              interestRate={loans.length > 0 ? loans[0].interest_rate : 0}
+              assumptions={assumptions}
+              totalCashInvested={propertyData.currentValue - aggregatedLoanData.totalPrincipal}
+            />
+          </div>
         </div>
       </main>
     </div>
@@ -615,17 +609,42 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
 }
 
 function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
-  // Simplified timeline for now
   return (
-    <div className="space-y-2">
-      {milestones.map((milestone, index) => (
-        <div key={index} className="flex items-center justify-between py-2 border-b border-[#f3f4f6]">
-          <span className="text-sm">{milestone.label}</span>
-          <span className={`text-sm font-medium ${milestone.achieved ? 'text-green-600' : 'text-[#6b7280]'}`}>
-            {milestone.year}
-          </span>
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center">
+        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        Financial Milestones
+      </h3>
+      
+      {/* Timeline with Perfect Alignment */}
+      <div className="relative h-40">
+        {/* Timeline line - positioned exactly in center */}
+        <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
+        
+        {/* Nodes positioned absolutely on the line */}
+        <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between items-center">
+          {milestones.map((milestone, index) => (
+            <div 
+              key={index}
+              className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md ${
+                milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
+              }`}
+            ></div>
+          ))}
         </div>
-      ))}
+        
+        {/* Labels positioned below the line */}
+        <div className="absolute left-0 right-0 top-1/2 transform translate-y-4 flex justify-between">
+          {milestones.map((milestone, index) => (
+            <div key={index} className="text-center">
+              <div className="text-sm font-medium text-gray-700">{milestone.label}</div>
+              <div className="text-xs text-gray-500">Year {milestone.year}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

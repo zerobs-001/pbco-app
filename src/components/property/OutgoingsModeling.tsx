@@ -22,63 +22,63 @@ const DEFAULT_OUTGOING_ITEMS: OutgoingItem[] = [
     name: "Loan Interest",
     amount: 0,
     growthRate: 0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "property_management",
     name: "Property Management",
     amount: 0,
     growthRate: 3.0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "insurance",
     name: "Building & Landlord Insurance",
     amount: 0,
     growthRate: 4.0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "council_rates",
     name: "Council Rates + Water Estimate",
     amount: 0,
     growthRate: 3.5,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "yard_maintenance",
     name: "Yard Maintenance (multi-dwelling)",
     amount: 0,
     growthRate: 3.0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "maintenance_allowance",
     name: "Maintenance Allowance",
     amount: 0,
     growthRate: 4.0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "land_tax",
     name: "Land Tax (if applicable)",
     amount: 0,
     growthRate: 3.0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "principal_payments",
     name: "Principal Payments",
     amount: 0,
     growthRate: 0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   },
   {
     id: "deductions_rebate",
     name: "Potential Deductions / Rebate",
     amount: 0,
     growthRate: 0,
-    isCustom: false
+    isCustom: true // Changed to true so it can be removed
   }
 ];
 
@@ -132,7 +132,11 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
   };
 
   const formatCurrency = (amount: number): string => {
-    return `$${(amount / 1000).toFixed(amount >= 1000 ? 0 : 1)}${amount >= 1000 ? 'K' : ''}`;
+    if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(1)}K`;
+    } else {
+      return `$${amount.toFixed(0)}`;
+    }
   };
 
   const summary = (
@@ -160,9 +164,9 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
         <div className="space-y-3">
           {outgoingItems.map((item) => (
             <div key={item.id} className="border border-[#e5e7eb] rounded-lg p-4">
-              <div className="grid grid-cols-12 gap-3 items-center">
+              <div className="grid grid-cols-1 gap-3 items-center md:grid-cols-12">
                 {/* Name */}
-                <div className="col-span-4">
+                <div className="col-span-1 md:col-span-4">
                   <label className="block text-xs font-medium text-[#6b7280] mb-1">
                     Expense Category
                   </label>
@@ -179,7 +183,7 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
                 </div>
 
                 {/* Annual Amount */}
-                <div className="col-span-3">
+                <div className="col-span-1 md:col-span-3">
                   <label className="block text-xs font-medium text-[#6b7280] mb-1">
                     Annual Amount
                   </label>
@@ -193,7 +197,7 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
                 </div>
 
                 {/* Growth Rate */}
-                <div className="col-span-2">
+                <div className="col-span-1 md:col-span-2">
                   <label className="block text-xs font-medium text-[#6b7280] mb-1">
                     Growth %
                   </label>
@@ -208,7 +212,7 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
                 </div>
 
                 {/* Monthly Amount (Display) */}
-                <div className="col-span-2">
+                <div className="col-span-1 md:col-span-2">
                   <label className="block text-xs font-medium text-[#6b7280] mb-1">
                     Per Month
                   </label>
@@ -218,18 +222,16 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
                 </div>
 
                 {/* Remove Button */}
-                <div className="col-span-1 flex justify-end">
-                  {item.isCustom && (
-                    <button
-                      onClick={() => removeOutgoingItem(item.id)}
-                      className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                      title="Remove item"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
+                <div className="col-span-1 md:col-span-1 flex justify-end">
+                  <button
+                    onClick={() => removeOutgoingItem(item.id)}
+                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                    title="Remove item"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>

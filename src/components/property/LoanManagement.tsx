@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Loan, LoanType } from '@/types';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import CollapsibleSection from '../ui/CollapsibleSection';
 
 // Icons (simplified - you can replace with your icon system)
 const IconPlus = ({ className }: { className?: string }) => (
@@ -201,17 +202,20 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
     }
   };
 
+  const totalPrincipal = loans.reduce((sum, loan) => sum + loan.principal_amount, 0);
+  
+  const summary = (
+    <div className="text-sm text-[#6b7280]">
+      {loans.length} loan{loans.length !== 1 ? 's' : ''} • Total: {formatCurrency(totalPrincipal)}
+    </div>
+  );
+
   return (
-    <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">
-          Loan Details {loans.length > 0 && (
-            <span className="text-sm font-normal text-[#6b7280] ml-2">
-              ({loans.length} loan{loans.length !== 1 ? 's' : ''})
-            </span>
-          )}
-        </h2>
-      </div>
+    <CollapsibleSection 
+      title="Loan Details" 
+      summary={summary}
+      defaultExpanded={true}
+    >
 
       {/* Loan List */}
       {loans.length === 0 && !isAddingLoan && (
@@ -366,7 +370,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
         cancelText="Cancel"
         variant="danger"
       />
-    </section>
+    </CollapsibleSection>
   );
 }
 
