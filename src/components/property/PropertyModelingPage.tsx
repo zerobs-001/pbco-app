@@ -362,130 +362,81 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
 }
 
 function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projections: YearlyProjection[]; breakEvenYear: number; height?: number }) {
-  const [isClient, setIsClient] = useState(false);
-
-  // Only render chart on client to prevent hydration mismatch
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Show loading state on server
-  if (!isClient) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-[#6b7280]">Annual Cashflow Projection (First 10 Years)</p>
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span>Positive</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-gray-400 rounded"></div>
-              <span>Negative</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
-          <div className="flex items-center justify-center h-48">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-              <p className="text-sm text-[#6b7280]">Loading chart...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // TEST: Use static data first to verify chart rendering works
-  const testData = [
-    { year: 2024, cashflow: -12000 },
-    { year: 2025, cashflow: -10500 },
-    { year: 2026, cashflow: -8500 },
-    { year: 2027, cashflow: -6000 },
-    { year: 2028, cashflow: -3000 },
-    { year: 2029, cashflow: 2000 },
-    { year: 2030, cashflow: 8500 },
-    { year: 2031, cashflow: 12000 },
-    { year: 2032, cashflow: 15800 },
-    { year: 2033, cashflow: 19500 },
-  ];
-
-  const maxCashflow = Math.max(...testData.map(d => Math.abs(d.cashflow)));
-  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#6b7280]">TEST: Static Cashflow Chart (First 10 Years)</p>
-        <div className="flex items-center gap-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-            <span>Positive</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-400 rounded"></div>
-            <span>Negative</span>
-          </div>
-        </div>
+        <p className="text-sm text-[#6b7280]">ULTRA SIMPLE TEST CHART</p>
       </div>
       
-      {/* Chart */}
+      {/* Ultra simple chart */}
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
         <div className="flex items-end justify-between h-48 gap-2">
-          {testData.map((data, index) => {
-            const cashflow = data.cashflow;
-            const isPositive = cashflow >= 0;
-            const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
-            const barHeight = Math.max(heightPercent, 5); // Minimum 5% height
-            
-            return (
-              <div key={data.year} className="flex flex-col items-center flex-1">
-                {/* Bar */}
-                <div 
-                  className={`w-full rounded-t transition-all duration-200 ${
-                    isPositive ? 'bg-blue-500' : 'bg-gray-400'
-                  }`}
-                  style={{ height: `${barHeight}%` }}
-                ></div>
-                
-                {/* Year label */}
-                <div className="text-xs text-[#6b7280] mt-2 text-center">
-                  {data.year}
-                </div>
-                
-                {/* Value label */}
-                <div className="text-xs font-medium mt-1 text-center">
-                  ${(cashflow / 1000).toFixed(1)}K
-                </div>
-              </div>
-            );
-          })}
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-red-500" style={{ height: '20%' }}></div>
+            <div className="text-xs mt-2">2024</div>
+            <div className="text-xs">-$12K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-red-500" style={{ height: '18%' }}></div>
+            <div className="text-xs mt-2">2025</div>
+            <div className="text-xs">-$10K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-red-500" style={{ height: '15%' }}></div>
+            <div className="text-xs mt-2">2026</div>
+            <div className="text-xs">-$8K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-red-500" style={{ height: '12%' }}></div>
+            <div className="text-xs mt-2">2027</div>
+            <div className="text-xs">-$6K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-red-500" style={{ height: '8%' }}></div>
+            <div className="text-xs mt-2">2028</div>
+            <div className="text-xs">-$3K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-green-500" style={{ height: '5%' }}></div>
+            <div className="text-xs mt-2">2029</div>
+            <div className="text-xs">+$2K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-green-500" style={{ height: '15%' }}></div>
+            <div className="text-xs mt-2">2030</div>
+            <div className="text-xs">+$8K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-green-500" style={{ height: '25%' }}></div>
+            <div className="text-xs mt-2">2031</div>
+            <div className="text-xs">+$12K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-green-500" style={{ height: '35%' }}></div>
+            <div className="text-xs mt-2">2032</div>
+            <div className="text-xs">+$16K</div>
+          </div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-full bg-green-500" style={{ height: '40%' }}></div>
+            <div className="text-xs mt-2">2033</div>
+            <div className="text-xs">+$20K</div>
+          </div>
         </div>
       </div>
       
       {/* Summary */}
       <div className="text-center text-sm text-[#6b7280]">
-        TEST: Static data showing negative to positive cashflow transition
+        ULTRA SIMPLE: Red bars = negative, Green bars = positive
       </div>
       
-      {/* Data summary */}
+      {/* Debug info */}
       <div className="text-xs text-[#6b7280] bg-[#f9fafb] p-3 rounded">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="font-medium">Test Chart Summary:</p>
-            <p>• 10 test years</p>
-            <p>• Max cashflow: ${(maxCashflow / 1000).toFixed(1)}K</p>
-            <p>• Break-even: ~2029</p>
-          </div>
-          <div>
-            <p className="font-medium">Sample Values:</p>
-            <p>• Year 1: -$12.0K</p>
-            <p>• Year 5: -$3.0K</p>
-            <p>• Year 10: +$19.5K</p>
-          </div>
-        </div>
+        <p className="font-medium">Debug Info:</p>
+        <p>• Chart component is rendering</p>
+        <p>• 10 hardcoded bars</p>
+        <p>• Red = negative cashflow</p>
+        <p>• Green = positive cashflow</p>
+        <p>• If you see this, chart rendering works!</p>
       </div>
     </div>
   );
