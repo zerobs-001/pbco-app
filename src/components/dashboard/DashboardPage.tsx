@@ -2,6 +2,15 @@
 
 import React, { useMemo } from "react";
 
+// Helper function for consistent date formatting
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function DashboardPage() {
   return (
     <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
@@ -203,7 +212,7 @@ function KpiCard({ title, value, accent, helper }: { title: string; value: strin
                         {property.address}
                       </div>
                       <div className="text-xs text-[#6b7280] mt-1">
-                        Purchased: {new Date(property.purchaseDate).toLocaleDateString()} | Strategy: {property.strategy}
+                        Purchased: {formatDate(property.purchaseDate)} | Strategy: {property.strategy}
                       </div>
                     </div>
                   </td>
