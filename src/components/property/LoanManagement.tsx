@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Loan, LoanType } from '@/types';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 // Icons (simplified - you can replace with your icon system)
 const IconPlus = ({ className }: { className?: string }) => (
@@ -47,6 +48,15 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
   const [isAddingLoan, setIsAddingLoan] = useState(false);
   const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
   const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    loanId: string;
+    loanName: string;
+  }>({
+    isOpen: false,
+    loanId: '',
+    loanName: ''
+  });
   const [formData, setFormData] = useState<LoanFormData>({
     name: '',
     type: 'principal_interest',
@@ -91,11 +101,23 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
     setExpandedLoanId(expandedLoanId === loanId ? null : loanId);
   };
 
-  const handleDeleteLoan = async (loanId: string) => {
-    if (!confirm('Are you sure you want to delete this loan?')) return;
-    
-    const updatedLoans = loans.filter(loan => loan.id !== loanId);
+  const handleDeleteLoan = (loanId: string) => {
+    const loan = loans.find(l => l.id === loanId);
+    setDeleteConfirmation({
+      isOpen: true,
+      loanId,
+      loanName: (loan as any)?.name || 'this loan'
+    });
+  };
+
+  const confirmDeleteLoan = () => {
+    const updatedLoans = loans.filter(loan => loan.id !== deleteConfirmation.loanId);
     onLoansChange(updatedLoans);
+    setDeleteConfirmation({ isOpen: false, loanId: '', loanName: '' });
+  };
+
+  const cancelDeleteLoan = () => {
+    setDeleteConfirmation({ isOpen: false, loanId: '', loanName: '' });
   };
 
   const handleSaveLoan = async () => {
@@ -332,6 +354,18 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={cancelDeleteLoan}
+        onConfirm={confirmDeleteLoan}
+        title="Delete Loan"
+        message={`Are you sure you want to delete "${deleteConfirmation.loanName}"? This action cannot be undone.`}
+        confirmText="Delete Loan"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </section>
   );
 }
