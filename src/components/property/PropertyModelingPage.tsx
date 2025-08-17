@@ -376,29 +376,29 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
     );
   }
 
-  // Get first 10 years of data
-  const chartData = projections.slice(0, 10);
+  // Get all 30 years of data
+  const chartData = projections.slice(0, 30);
   const maxCashflow = Math.max(...chartData.map(p => Math.abs(p.netCashflow)));
   
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#6b7280]">Annual Cashflow Projection (First 10 Years)</p>
+        <p className="text-sm text-[#6b7280]">30-Year Cashflow Projection</p>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-blue-500 rounded"></div>
-            <span>Positive</span>
+            <span>Positive Cashflow</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-gray-400 rounded"></div>
-            <span>Negative</span>
+            <span>Negative Cashflow</span>
           </div>
         </div>
       </div>
       
       {/* Chart */}
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
-        <div className="flex items-center justify-between h-48 gap-2 relative">
+        <div className="flex items-center justify-between h-48 gap-1 relative overflow-x-auto">
           {/* X-axis line */}
           <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 border-t border-gray-300"></div>
           
@@ -409,8 +409,11 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
             // Convert percentage to pixels and round to prevent hydration mismatch
             const barHeight = Math.max(Math.round((heightPercent / 100) * 40), 3); // Max 40px, min 3px
             
+            // Show year labels for every 5th year to avoid clutter
+            const showYearLabel = index % 5 === 0 || index === chartData.length - 1;
+            
             return (
-              <div key={projection.year} className="flex flex-col items-center flex-1 relative">
+              <div key={projection.year} className="flex flex-col items-center flex-shrink-0 relative" style={{ width: '20px' }}>
                 {/* Bar positioned above or below x-axis */}
                 <div 
                   className={`w-full rounded-t transition-all duration-200 ${
@@ -425,15 +428,19 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                   }}
                 ></div>
                 
-                {/* Year label */}
-                <div className="text-xs text-[#6b7280] mt-2 text-center absolute bottom-0">
-                  {projection.year}
-                </div>
+                {/* Year label - only show every 5th year */}
+                {showYearLabel && (
+                  <div className="text-xs text-[#6b7280] mt-2 text-center absolute bottom-0">
+                    {projection.year}
+                  </div>
+                )}
                 
-                {/* Value label */}
-                <div className="text-xs font-medium mt-1 text-center absolute bottom-6">
-                  ${(cashflow / 1000).toFixed(1)}K
-                </div>
+                {/* Value label - only show for significant years */}
+                {(index === 0 || index === 4 || index === 9 || index === 14 || index === 19 || index === 24 || index === 29) && (
+                  <div className="text-xs font-medium mt-1 text-center absolute bottom-6">
+                    ${(cashflow / 1000).toFixed(1)}K
+                  </div>
+                )}
               </div>
             );
           })}
@@ -450,15 +457,17 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="font-medium">Chart Summary:</p>
-            <p>• {projections.length} total years</p>
+            <p>• {projections.length} total years (2024-2054)</p>
             <p>• Max cashflow: ${(maxCashflow / 1000).toFixed(1)}K</p>
             <p>• Break-even: {breakEvenYear}</p>
+            <p>• Positive years: {projections.filter(p => p.netCashflow > 0).length}/30</p>
           </div>
           <div>
-            <p className="font-medium">Sample Years:</p>
+            <p className="font-medium">Key Milestones:</p>
             <p>• Year 1: ${(projections[0]?.netCashflow / 1000).toFixed(1)}K</p>
-            <p>• Year 5: ${(projections[4]?.netCashflow / 1000).toFixed(1)}K</p>
             <p>• Year 10: ${(projections[9]?.netCashflow / 1000).toFixed(1)}K</p>
+            <p>• Year 20: ${(projections[19]?.netCashflow / 1000).toFixed(1)}K</p>
+            <p>• Year 30: ${(projections[29]?.netCashflow / 1000).toFixed(1)}K</p>
           </div>
         </div>
       </div>
