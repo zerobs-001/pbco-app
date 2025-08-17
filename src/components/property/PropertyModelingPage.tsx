@@ -375,7 +375,8 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       <div className={`relative overflow-x-auto`} style={{ height }}>
         <div className="flex items-end gap-1 h-full min-w-max px-4">
           {projections.map((projection) => {
-            const barHeight = (Math.abs(projection.netCashflow) / maxCashflow) * 100;
+            // Fix hydration mismatch by rounding to 2 decimal places
+            const barHeight = Math.round((Math.abs(projection.netCashflow) / maxCashflow) * 10000) / 100;
             const isPositive = projection.netCashflow >= 0;
             const isBreakEven = projection.year === breakEvenYear;
             
