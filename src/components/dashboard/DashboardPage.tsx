@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { propertyService } from "@/lib/services/propertyService";
+import { Property } from "@/types";
 
 // Helper function for consistent date formatting
 function formatDate(dateString: string): string {
@@ -11,29 +13,175 @@ function formatDate(dateString: string): string {
   return `${day}/${month}/${year}`;
 }
 
+// Helper function to calculate DSCR
+function calculateDSCR(annualRent: number, annualExpenses: number, loan: any): string {
+  if (loan.principal_amount > 0 && loan.interest_rate > 0) {
+    const monthlyRate = loan.interest_rate / 100 / 12;
+    const totalPayments = loan.term_years * 12;
+    const monthlyPayment = (loan.principal_amount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
+                         (Math.pow(1 + monthlyRate, totalPayments) - 1);
+    const annualLoanPayment = monthlyPayment * 12;
+    const netOperatingIncome = annualRent - annualExpenses;
+    const dscr = annualLoanPayment > 0 ? netOperatingIncome / annualLoanPayment : 0;
+    return `${dscr.toFixed(1)}x`;
+  }
+  return 'N/A';
+}
+
 export default function DashboardPage() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Hardcoded portfolio ID for now (same as used in property creation)
+  const portfolioId = "e20784fd-d716-431a-a857-bfba1c661b6c";
+
+  // Fetch properties on component mount
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const propertiesData = await propertyService.getPropertiesByPortfolioId(portfolioId);
+        setProperties(propertiesData);
+      } catch (err) {
+        console.error('Error fetching properties:', err);
+        setError('Failed to load properties');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, [portfolioId]);
+
+  // Calculate portfolio KPIs
+  const portfolioKPIs = useMemo(() => {
+    if (properties.length === 0) {
+      return {
+        totalValue: 0,
+        averageLVR: 0,
+        averageDSCR: 0,
+        modeledCount: 0,
+        totalProperties: 0
+      };
+    }
+
+    const totalValue = properties.reduce((sum, prop) => sum + (prop.current_value || 0), 0);
+    const modeledProperties = properties.filter(prop => prop.cashflow_status === 'modeled');
+    
+    // Calculate average LVR (Loan to Value Ratio) - simplified calculation
+    const totalLoans = properties.reduce((sum, prop) => {
+      return sum + (prop.loan?.principal_amount || 0);
+    }, 0);
+    const averageLVR = totalValue > 0 ? (totalLoans / totalValue) * 100 : 0;
+
+    // Calculate average DSCR (Debt Service Coverage Ratio) - simplified calculation
+    const totalAnnualRent = properties.reduce((sum, prop) => sum + (prop.annual_rent || 0), 0);
+    const totalAnnualExpenses = properties.reduce((sum, prop) => sum + (prop.annual_expenses || 0), 0);
+    const totalLoanPayments = properties.reduce((sum, prop) => {
+      if (prop.loan && prop.loan.principal_amount > 0 && prop.loan.interest_rate > 0) {
+        const monthlyRate = prop.loan.interest_rate / 100 / 12;
+        const totalPayments = prop.loan.term_years * 12;
+        const monthlyPayment = (prop.loan.principal_amount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
+                             (Math.pow(1 + monthlyRate, totalPayments) - 1);
+        return sum + (monthlyPayment * 12);
+      }
+      return sum;
+    }, 0);
+    const averageDSCR = totalLoanPayments > 0 ? (totalAnnualRent - totalAnnualExpenses) / totalLoanPayments : 0;
+
+    return {
+      totalValue,
+      averageLVR,
+      averageDSCR,
+      modeledCount: modeledProperties.length,
+      totalProperties: properties.length
+    };
+  }, [properties]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
+        <AppHeader />
+        <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto mb-4"></div>
+              <p className="text-[#6b7280]">Loading portfolio data...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
+        <AppHeader />
+        <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="text-red-500 text-2xl mb-4">⚠️</div>
+              <h2 className="text-xl font-semibold text-[#111827] mb-2">Error Loading Portfolio</h2>
+              <p className="text-[#6b7280] mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="inline-flex items-center px-4 py-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8]"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
       <AppHeader />
       <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
         <div className="flex flex-col gap-6">
           <PortfolioHeader />
-                        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <KpiCard title="Total Portfolio Value" value="$3.25M" accent="blue" helper="Across 5 properties" />
-                <KpiCard title="Average LVR" value="68.0%" accent="orange" helper="Target ≤ 70%" />
-                <KpiCard title="Average DSCR" value="1.9x" accent="green" helper="> 1.25x is healthy" />
-                <KpiCard title="Modeled Properties" value="3/5" accent="purple" helper="2 need modeling" />
-              </section>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <KpiCard 
+              title="Total Portfolio Value" 
+              value={`$${(portfolioKPIs.totalValue / 1000000).toFixed(1)}M`} 
+              accent="blue" 
+              helper={`Across ${portfolioKPIs.totalProperties} properties`} 
+            />
+            <KpiCard 
+              title="Average LVR" 
+              value={`${portfolioKPIs.averageLVR.toFixed(1)}%`} 
+              accent="orange" 
+              helper="Target ≤ 70%" 
+            />
+            <KpiCard 
+              title="Average DSCR" 
+              value={`${portfolioKPIs.averageDSCR.toFixed(1)}x`} 
+              accent="green" 
+              helper="> 1.25x is healthy" 
+            />
+            <KpiCard 
+              title="Modeled Properties" 
+              value={`${portfolioKPIs.modeledCount}/${portfolioKPIs.totalProperties}`} 
+              accent="purple" 
+              helper={`${portfolioKPIs.totalProperties - portfolioKPIs.modeledCount} need modeling`} 
+            />
+          </section>
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-6">
             <div className="xl:col-span-2 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
-                                <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
-                    <h3 className="text-lg font-semibold">My Investment Portfolio</h3>
-                    <a href="/property/new" className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
-                      <IconPlus className="h-4 w-4" /> Add Property
-                    </a>
-                  </div>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
+                <h3 className="text-lg font-semibold">My Investment Portfolio</h3>
+                <a href="/property/new" className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(17,24,39,0.08)]">
+                  <IconPlus className="h-4 w-4" /> Add Property
+                </a>
+              </div>
               <div className="max-h-[600px] overflow-auto">
-                <PropertyTable />
+                <PropertyTable properties={properties} />
               </div>
             </div>
             <div className="flex flex-col gap-6">
@@ -88,81 +236,8 @@ function KpiCard({ title, value, accent, helper }: { title: string; value: strin
   );
 }
 
-    function PropertyTable() {
-      const properties = [
-        {
-          id: "1",
-          name: "Sydney House",
-          type: "Residential House",
-          value: "$920K",
-          lvr: "68%",
-          dscr: "1.9x",
-          status: "modeled" as const,
-          cashflow: "+$12K/yr",
-          breakEven: "2028",
-          strategy: "Buy & Hold",
-          address: "123 Sydney Street, Sydney NSW 2000",
-          purchaseDate: "2023-01-15",
-        },
-        {
-          id: "2",
-          name: "Melbourne Unit",
-          type: "Residential Unit",
-          value: "$680K",
-          lvr: "62%",
-          dscr: "2.1x",
-          status: "modeled" as const,
-          cashflow: "+$8K/yr",
-          breakEven: "2030",
-          strategy: "Buy & Hold",
-          address: "456 Collins Street, Melbourne VIC 3000",
-          purchaseDate: "2023-06-20",
-        },
-        {
-          id: "3",
-          name: "Brisbane Office",
-          type: "Commercial Office",
-          value: "$520K",
-          lvr: "70%",
-          dscr: "1.7x",
-          status: "needs_modeling" as const,
-          cashflow: "Not modeled",
-          breakEven: "N/A",
-          strategy: "Value-Add",
-          address: "789 Queen Street, Brisbane QLD 4000",
-          purchaseDate: "2024-01-10",
-        },
-        {
-          id: "4",
-          name: "Perth Retail",
-          type: "Commercial Retail",
-          value: "$380K",
-          lvr: "65%",
-          dscr: "2.3x",
-          status: "modeled" as const,
-          cashflow: "+$15K/yr",
-          breakEven: "2026",
-          strategy: "Manufacture Equity",
-          address: "321 Hay Street, Perth WA 6000",
-          purchaseDate: "2023-09-15",
-        },
-        {
-          id: "5",
-          name: "Adelaide Industrial",
-          type: "Commercial Industrial",
-          value: "$750K",
-          lvr: "75%",
-          dscr: "1.5x",
-          status: "modeling" as const,
-          cashflow: "In progress",
-          breakEven: "N/A",
-          strategy: "Value-Add Commercial",
-          address: "147 Port Road, Adelaide SA 5000",
-          purchaseDate: "2024-02-28",
-        },
-      ];
-
-  const getStatusIcon = (status: string) => {
+    function PropertyTable({ properties }: { properties: Property[] }) {
+      const getStatusIcon = (status: string) => {
     switch (status) {
       case "modeled":
         return <IconCheck className="h-4 w-4 text-green-600" />;
@@ -179,12 +254,14 @@ function KpiCard({ title, value, accent, helper }: { title: string; value: strin
     switch (status) {
       case "modeled":
         return "Modeled";
-      case "needs_modeling":
-        return "Needs Modeling";
+      case "not_modeled":
+        return "Not Modeled";
+      case "modeling":
+        return "Modeling";
       case "error":
         return "Error";
       default:
-        return "Pending";
+        return "Unknown";
     }
   };
 
@@ -212,35 +289,43 @@ function KpiCard({ title, value, accent, helper }: { title: string; value: strin
                         {property.address}
                       </div>
                       <div className="text-xs text-[#6b7280] mt-1">
-                        Purchased: {formatDate(property.purchaseDate)} | Strategy: {property.strategy}
+                        Purchased: {formatDate(property.purchase_date)} | Strategy: {property.strategy}
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-4 text-sm text-[#111827]">{property.type}</td>
-                  <td className="px-5 py-4 text-sm text-[#111827]">{property.value}</td>
-                  <td className="px-5 py-4 text-sm text-[#111827]">{property.lvr}</td>
-                  <td className="px-5 py-4 text-sm text-[#111827]">{property.dscr}</td>
+                                      <td className="px-5 py-4 text-sm text-[#111827]">${(property.current_value / 1000).toFixed(0)}K</td>
+                    <td className="px-5 py-4 text-sm text-[#111827]">
+                      {property.loan && property.current_value > 0 
+                        ? `${((property.loan.principal_amount / property.current_value) * 100).toFixed(1)}%` 
+                        : 'N/A'}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-[#111827]">
+                      {property.cashflow_status === 'modeled' && property.annual_rent && property.annual_expenses && property.loan
+                        ? calculateDSCR(property.annual_rent, property.annual_expenses, property.loan)
+                        : 'N/A'}
+                    </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(property.status)}
-                      <span className="text-sm text-[#111827]">{getStatusText(property.status)}</span>
+                      {getStatusIcon(property.cashflow_status)}
+                      <span className="text-sm text-[#111827]">{getStatusText(property.cashflow_status)}</span>
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="flex gap-2">
-                      {property.status === "needs_modeling" ? (
-                        <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
-                          <IconPlay className="h-3 w-3" /> Model
-                        </a>
-                      ) : property.status === "modeling" ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-[#f59e0b] px-2 py-1 text-xs font-medium text-white">
-                          <IconClock className="h-3 w-3" /> In Progress
-                        </span>
-                      ) : (
-                        <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
-                          <IconEye className="h-3 w-3" /> View
-                        </a>
-                      )}
+                                          <div className="flex gap-2">
+                        {property.cashflow_status === "not_modeled" ? (
+                          <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#2563eb] px-2 py-1 text-xs font-medium text-white hover:bg-[#1d4ed8]">
+                            <IconPlay className="h-3 w-3" /> Model
+                          </a>
+                        ) : property.cashflow_status === "modeling" ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[#f59e0b] px-2 py-1 text-xs font-medium text-white">
+                            <IconClock className="h-3 w-3" /> In Progress
+                          </span>
+                        ) : (
+                          <a href={`/property/${property.id}/model`} className="inline-flex items-center gap-1 rounded-md bg-[#059669] px-2 py-1 text-xs font-medium text-white hover:bg-[#047857]">
+                            <IconEye className="h-3 w-3" /> View
+                          </a>
+                        )}
                       <button className="inline-flex items-center gap-1 rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-xs font-medium text-[#111827] hover:bg-[#f9fafb]">
                         <IconEdit className="h-3 w-3" /> Edit
                       </button>

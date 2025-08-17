@@ -203,22 +203,39 @@ export class PropertyService {
   /**
    * Get a single property by ID
    */
-  async getPropertyById(propertyId: string): Promise<Property | null> {
+  async getPropertyById(id: string): Promise<Property | null> {
     try {
-      const response = await fetch(`/api/properties/${propertyId}`);
-
+      const response = await fetch(`/api/properties/${id}`);
+      
       if (!response.ok) {
         if (response.status === 404) {
-          return null; // Property not found
+          return null;
         }
         const errorData = await response.json();
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const { property } = await response.json();
-      return property;
+      return this.mapDatabasePropertyToType(property);
     } catch (error) {
       console.error('Error fetching property:', error);
+      throw error;
+    }
+  }
+
+  async getPropertiesByPortfolioId(portfolioId: string): Promise<Property[]> {
+    try {
+      const response = await fetch(`/api/properties?portfolioId=${portfolioId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const { properties } = await response.json();
+      return properties.map((property: any) => this.mapDatabasePropertyToType(property));
+    } catch (error) {
+      console.error('Error fetching properties:', error);
       throw error;
     }
   }
