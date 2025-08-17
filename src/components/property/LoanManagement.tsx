@@ -100,8 +100,25 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   const handleSaveLoan = async () => {
     try {
-      console.log('🔄 Saving loan:', { editingLoanId, formData, currentLoans: loans });
+      console.log('🔄 LoanManagement: Starting loan save process');
+      console.log('📝 Form data:', formData);
+      console.log('📊 Current loans:', loans);
+      console.log('✏️ Editing loan ID:', editingLoanId);
       
+      // Validate form data
+      if (!formData.name?.trim()) {
+        alert('Please enter a loan name');
+        return;
+      }
+      if (!formData.principal_amount || formData.principal_amount <= 0) {
+        alert('Please enter a valid principal amount');
+        return;
+      }
+      if (!formData.interest_rate || formData.interest_rate <= 0) {
+        alert('Please enter a valid interest rate');
+        return;
+      }
+
       if (editingLoanId) {
         // Update existing loan
         const updatedLoans = loans.map(loan => 
@@ -113,8 +130,8 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
               }
             : loan
         );
-        console.log('✏️ Updating loan, new loans array:', updatedLoans);
-        onLoansChange(updatedLoans);
+        console.log('✏️ Updating existing loan, new loans array:', updatedLoans);
+        await onLoansChange(updatedLoans);
       } else {
         // Add new loan
         const newLoan: Loan = {
@@ -125,17 +142,22 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
           updated_at: new Date().toISOString()
         };
         const updatedLoans = [...loans, newLoan];
-        console.log('➕ Adding new loan:', newLoan);
-        console.log('📋 New loans array:', updatedLoans);
-        onLoansChange(updatedLoans);
+        console.log('➕ Creating new loan:', newLoan);
+        console.log('📋 Sending updated loans array to parent:', updatedLoans);
+        
+        // Call the parent callback and wait for it
+        await onLoansChange(updatedLoans);
+        console.log('✅ LoanManagement: Parent callback completed');
       }
 
-      // Reset form state
+      // Reset form state only after successful save
+      console.log('🔄 Resetting form state');
       setIsAddingLoan(false);
       setEditingLoanId(null);
       resetForm();
+      console.log('✅ LoanManagement: Loan save process completed');
     } catch (error) {
-      console.error('❌ Error saving loan:', error);
+      console.error('❌ LoanManagement: Error in handleSaveLoan:', error);
       alert('Failed to save loan. Please try again.');
     }
   };
@@ -200,7 +222,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
             </div>
           ) : (
             <div>
-              {/* Collapsed View - Just loan name */}
+              {/* Collapsed View - Loan name and summary */}
               <div 
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#f9fafb]"
                 onClick={() => toggleLoanExpansion(loan.id)}
@@ -209,17 +231,16 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
                   <div className="flex-shrink-0">
                     <div className="w-2 h-2 bg-[#2563eb] rounded-full"></div>
                   </div>
-                  <h3 className="font-medium text-[#111827]">
-                    {(loan as any).name || `Loan #${index + 1}`}
-                  </h3>
-                  <span className="text-sm text-[#6b7280]">
-                    {formatCurrency(loan.principal_amount)} @ {loan.interest_rate}%
-                  </span>
+                  <div>
+                    <h3 className="font-semibold text-[#111827]">
+                      {(loan as any).name || `Loan #${index + 1}`}
+                    </h3>
+                    <p className="text-xs text-[#6b7280] mt-0.5">
+                      {formatCurrency(loan.principal_amount)} @ {loan.interest_rate}%
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#6b7280]">
-                    {expandedLoanId === loan.id ? 'Collapse' : 'Expand'}
-                  </span>
+                <div className="flex items-center">
                   <svg 
                     className={`h-4 w-4 text-[#6b7280] transition-transform ${expandedLoanId === loan.id ? 'rotate-180' : ''}`} 
                     fill="none" 

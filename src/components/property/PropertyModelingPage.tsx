@@ -414,7 +414,14 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   // Handle loan management changes
   const handleLoansChange = useCallback(async (updatedLoans: Loan[]) => {
     try {
-      console.log('🏠 PropertyModelingPage: Received loan changes:', updatedLoans);
+      console.log('🏠 PropertyModelingPage: handleLoansChange called');
+      console.log('📊 Received loans:', updatedLoans);
+      console.log('🆔 Property ID:', propertyId);
+      
+      const requestBody = {
+        loans: updatedLoans
+      };
+      console.log('📤 Request body:', requestBody);
       
       // Update the property in the database
       const response = await fetch(`/api/properties/${propertyId}`, {
@@ -422,35 +429,49 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          loans: updatedLoans
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 API Response status:', response.status);
+      console.log('📡 API Response headers:', response.headers);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ API Error:', errorData);
-        throw new Error('Failed to update loans');
+        const errorText = await response.text();
+        console.error('❌ API Error response text:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('❌ API Error data:', errorData);
+        } catch (parseError) {
+          console.error('❌ Could not parse error response as JSON');
+        }
+        throw new Error(`Failed to update loans: ${response.status} ${response.statusText}`);
       }
 
-      const { property: updatedProperty } = await response.json();
+      const responseData = await response.json();
+      console.log('📥 Full API response:', responseData);
+      
+      const updatedProperty = responseData.property || responseData;
       console.log('✅ Updated property received:', updatedProperty);
+      
       setProperty(updatedProperty);
+      console.log('🔄 Property state updated');
 
       // Check if property should be marked as fully modeled
       if (isPropertyFullyModeled(updatedProperty, updatedLoans)) {
         try {
+          console.log('🎯 Marking property as modeled');
           await propertyService.updateCashflowStatus(propertyId, 'modeled');
           setProperty(prev => prev ? { ...prev, cashflow_status: 'modeled' } : null);
         } catch (err) {
           console.warn('Failed to update cashflow status to modeled:', err);
         }
       }
+      
+      console.log('✅ PropertyModelingPage: handleLoansChange completed successfully');
     } catch (error) {
-      console.error('❌ Error updating loans:', error);
-      alert('Failed to update loans. Please try again.');
+      console.error('❌ PropertyModelingPage: Error in handleLoansChange:', error);
+      alert(`Failed to update loans: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error; // Re-throw so LoanManagement can handle it
     }
   }, [propertyId, property, isPropertyFullyModeled]);
 

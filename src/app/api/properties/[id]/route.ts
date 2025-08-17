@@ -108,7 +108,14 @@ export async function PATCH(
     const propertyId = resolvedParams.id;
     const updates = await request.json();
 
-    console.log('🔄 API: Updating property with ID:', propertyId, updates);
+    console.log('🔄 API: Updating property with ID:', propertyId);
+    console.log('📝 Updates received:', updates);
+    
+    // Special handling for loans array
+    if (updates.loans) {
+      console.log('💰 Loans array in updates:', updates.loans);
+      console.log('💰 Number of loans:', updates.loans.length);
+    }
 
     // First, get the current property to merge with updates
     const { data: currentProperty, error: fetchError } = await supabase
@@ -138,6 +145,14 @@ export async function PATCH(
       ...updates,
       updated_at: new Date().toISOString()
     };
+    
+    console.log('📊 Current data:', currentData);
+    console.log('🔄 Updated data to save:', updatedData);
+    
+    // Special logging for loans
+    if (updatedData.loans) {
+      console.log('💰 Final loans data to save:', updatedData.loans);
+    }
 
     // Update property using service role (bypasses RLS)
     const { data: property, error } = await supabase
@@ -151,11 +166,18 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating property:', error);
+      console.error('❌ Error updating property:', error);
       return NextResponse.json(
         { error: `Failed to update property: ${error.message}` },
         { status: 500 }
       );
+    }
+    
+    console.log('✅ Property updated successfully in database');
+    console.log('📄 Updated property from DB:', property);
+    
+    if (property.data?.loans) {
+      console.log('💰 Loans saved in DB:', property.data.loans);
     }
 
     console.log('✅ Property updated:', property);
