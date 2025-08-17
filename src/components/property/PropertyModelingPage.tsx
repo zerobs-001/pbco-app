@@ -549,55 +549,41 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           Financial Milestones
         </h3>
         
-                {/* Simple Timeline */}
-        <div className="relative h-32">
-          {/* Timeline line - positioned in middle */}
-          <div className="absolute left-0 right-0 top-16 h-0.5 bg-gray-200"></div>
+                {/* Timeline with Perfect Alignment */}
+        <div className="relative h-40">
+          {/* Timeline line - positioned exactly in center */}
+          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
           
-          <div className="flex justify-between relative h-full">
-            {/* Break-even */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-              <div className="text-center mt-4">
-                <div className="text-sm font-medium text-gray-700">Break-even</div>
-                <div className="text-xs text-gray-500">Year 2029</div>
-              </div>
+          {/* Nodes positioned absolutely on the line */}
+          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between items-center">
+            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
+            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
+            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
+            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
+            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
+          </div>
+          
+          {/* Labels positioned below the line */}
+          <div className="absolute left-0 right-0 top-1/2 transform translate-y-4 flex justify-between">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-700">Break-even</div>
+              <div className="text-xs text-gray-500">Year 2029</div>
             </div>
-            
-            {/* 25% of Rent */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-              <div className="text-center mt-4">
-                <div className="text-sm font-medium text-gray-700">25% of Rent</div>
-                <div className="text-xs text-gray-500">Year 2032</div>
-              </div>
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-700">25% of Rent</div>
+              <div className="text-xs text-gray-500">Year 2032</div>
             </div>
-            
-            {/* 50% of Rent */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-              <div className="text-center mt-4">
-                <div className="text-sm font-medium text-gray-700">50% of Rent</div>
-                <div className="text-xs text-gray-500">Year 2038</div>
-              </div>
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-700">50% of Rent</div>
+              <div className="text-xs text-gray-500">Year 2038</div>
             </div>
-            
-            {/* 75% of Rent */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-              <div className="text-center mt-4">
-                <div className="text-sm font-medium text-gray-700">75% of Rent</div>
-                <div className="text-xs text-gray-500">Year 2045</div>
-              </div>
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-700">75% of Rent</div>
+              <div className="text-xs text-gray-500">Year 2045</div>
             </div>
-            
-            {/* 100% of Rent */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-              <div className="text-center mt-4">
-                <div className="text-sm font-medium text-gray-700">100% of Rent</div>
-                <div className="text-xs text-gray-500">Year 2052</div>
-              </div>
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-700">100% of Rent</div>
+              <div className="text-xs text-gray-500">Year 2052</div>
             </div>
           </div>
         </div>
