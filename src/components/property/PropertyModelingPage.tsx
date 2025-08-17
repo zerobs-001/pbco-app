@@ -356,6 +356,15 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
 function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projections: YearlyProjection[]; breakEvenYear: number; height?: number }) {
   const maxCashflow = Math.max(...projections.map(p => Math.abs(p.netCashflow)));
   
+  // Ensure we have data to display
+  if (!projections || projections.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-[#6b7280]">
+        <p>No projection data available</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -372,8 +381,8 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
         </div>
       </div>
       
-      <div className={`relative overflow-x-auto`} style={{ height }}>
-        <div className="flex items-end gap-1 h-full min-w-max px-4">
+      <div className={`relative overflow-x-auto border border-[#e5e7eb] rounded-lg`} style={{ height }}>
+        <div className="flex items-end gap-1 h-full min-w-max px-4 py-4">
           {projections.map((projection) => {
             // Fix hydration mismatch by rounding to 2 decimal places
             const barHeight = Math.round((Math.abs(projection.netCashflow) / maxCashflow) * 10000) / 100;
@@ -387,7 +396,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                     className={`w-4 rounded-t transition-all duration-200 ${
                       isPositive ? 'bg-blue-500' : 'bg-gray-400'
                     } ${isBreakEven ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
-                    style={{ height: `${barHeight}%` }}
+                    style={{ height: `${Math.max(barHeight, 1)}%` }}
                   ></div>
                   {isBreakEven && (
                     <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium text-green-600">
@@ -398,7 +407,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                 <div className="text-xs text-[#6b7280] mt-2 transform -rotate-45 origin-left">
                   {projection.year}
                 </div>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#111827] text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#111827] text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                   Year {projection.year}: ${(projection.netCashflow / 1000).toFixed(1)}K
                 </div>
               </div>
@@ -409,6 +418,11 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       
       <div className="text-center text-sm text-[#6b7280]">
         Break-even achieved in {breakEvenYear} • 30-year projection shows {projections.filter(p => p.netCashflow > 0).length} positive years
+      </div>
+      
+      {/* Debug info - remove in production */}
+      <div className="text-xs text-[#6b7280] bg-[#f9fafb] p-2 rounded">
+        <p>Chart Data: {projections.length} years, Max Cashflow: ${(maxCashflow / 1000).toFixed(1)}K, Break-even: {breakEvenYear}</p>
       </div>
     </div>
   );
