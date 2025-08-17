@@ -473,22 +473,97 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
         Break-even achieved in {breakEvenYear} • 30-year projection shows {projections.filter(p => p.netCashflow > 0).length} positive years
       </div>
       
-      {/* Data summary */}
-      <div className="text-xs text-[#6b7280] bg-[#f9fafb] p-3 rounded">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="font-medium">Chart Summary:</p>
-            <p>• {projections.length} total years (2024-2054)</p>
-            <p>• Max cashflow: ${(maxCashflow / 1000).toFixed(1)}K</p>
-            <p>• Break-even: {breakEvenYear}</p>
-            <p>• Positive years: {projections.filter(p => p.netCashflow > 0).length}/30</p>
+      {/* Modern Data Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Break-even Year */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Break-even</p>
+              <p className="text-2xl font-bold text-blue-900">{breakEvenYear}</p>
+              <p className="text-xs text-blue-600">Years to positive cashflow</p>
+            </div>
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
           </div>
-          <div>
-            <p className="font-medium">Key Milestones:</p>
-            <p>• Year 1: ${(projections[0]?.netCashflow / 1000).toFixed(1)}K</p>
-            <p>• Year 10: ${(projections[9]?.netCashflow / 1000).toFixed(1)}K</p>
-            <p>• Year 20: ${(projections[19]?.netCashflow / 1000).toFixed(1)}K</p>
-            <p>• Year 30: ${(projections[29]?.netCashflow / 1000).toFixed(1)}K</p>
+        </div>
+
+        {/* Total Years */}
+        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-green-700 uppercase tracking-wide">Timeline</p>
+              <p className="text-2xl font-bold text-green-900">{projections.length}</p>
+              <p className="text-xs text-green-600">Years (2024-2054)</p>
+            </div>
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Positive Years */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Success Rate</p>
+              <p className="text-2xl font-bold text-purple-900">{projections.filter(p => p.netCashflow > 0).length}/30</p>
+              <p className="text-xs text-purple-600">Positive cashflow years</p>
+            </div>
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Max Cashflow */}
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-orange-700 uppercase tracking-wide">Peak Cashflow</p>
+              <p className="text-2xl font-bold text-orange-900">${(maxCashflow / 1000).toFixed(0)}K</p>
+              <p className="text-xs text-orange-600">Maximum annual cashflow</p>
+            </div>
+            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Key Milestones */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Key Milestones
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">${(projections[0]?.netCashflow / 1000).toFixed(1)}K</div>
+            <div className="text-xs text-gray-500">Year 1</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">${(projections[9]?.netCashflow / 1000).toFixed(1)}K</div>
+            <div className="text-xs text-gray-500">Year 10</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">${(projections[19]?.netCashflow / 1000).toFixed(1)}K</div>
+            <div className="text-xs text-gray-500">Year 20</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">${(projections[29]?.netCashflow / 1000).toFixed(1)}K</div>
+            <div className="text-xs text-gray-500">Year 30</div>
           </div>
         </div>
       </div>
