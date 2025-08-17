@@ -531,29 +531,65 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers to automatically update updated_at
-CREATE TRIGGER IF NOT EXISTS update_users_updated_at BEFORE UPDATE ON public.users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_profiles_updated_at BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_portfolios_updated_at BEFORE UPDATE ON public.portfolios
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_portfolios_updated_at BEFORE UPDATE ON public.portfolios
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_properties_updated_at BEFORE UPDATE ON public.properties
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_properties_updated_at BEFORE UPDATE ON public.properties
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_loans_updated_at BEFORE UPDATE ON public.loans
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_loans_updated_at BEFORE UPDATE ON public.loans
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_reference_lmi_updated_at BEFORE UPDATE ON public.reference_lmi
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_reference_lmi_updated_at BEFORE UPDATE ON public.reference_lmi
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_reference_stamp_duty_updated_at BEFORE UPDATE ON public.reference_stamp_duty
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_reference_stamp_duty_updated_at BEFORE UPDATE ON public.reference_stamp_duty
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_reference_defaults_updated_at BEFORE UPDATE ON public.reference_defaults
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_reference_defaults_updated_at BEFORE UPDATE ON public.reference_defaults
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER IF NOT EXISTS update_reference_cap_rates_updated_at BEFORE UPDATE ON public.reference_cap_rates
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_reference_cap_rates_updated_at BEFORE UPDATE ON public.reference_cap_rates
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
