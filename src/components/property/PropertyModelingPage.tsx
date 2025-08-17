@@ -558,12 +558,13 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           const year75Percent = projections.find(p => p.netCashflow >= initialRent * 0.75)?.year || 2054;
           const year100Percent = projections.find(p => p.netCashflow >= initialRent)?.year || 2054;
           
+          const currentYear = 2025;
           const milestones = [
-            { year: breakEvenYear, label: 'Break-even', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0, achieved: breakEvenYear <= 2054 },
-            { year: year25Percent, label: '25% of Rent', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0, achieved: year25Percent <= 2054 },
-            { year: year50Percent, label: '50% of Rent', cashflow: projections.find(p => p.year === year50Percent)?.netCashflow || 0, achieved: year50Percent <= 2054 },
-            { year: year75Percent, label: '75% of Rent', cashflow: projections.find(p => p.year === year75Percent)?.netCashflow || 0, achieved: year75Percent <= 2054 },
-            { year: year100Percent, label: '100% of Rent', cashflow: projections.find(p => p.year === year100Percent)?.netCashflow || 0, achieved: year100Percent <= 2054 }
+            { year: breakEvenYear, label: 'Break-even', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0, achieved: breakEvenYear <= currentYear },
+            { year: year25Percent, label: '25% of Rent', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0, achieved: year25Percent <= currentYear },
+            { year: year50Percent, label: '50% of Rent', cashflow: projections.find(p => p.year === year50Percent)?.netCashflow || 0, achieved: year50Percent <= currentYear },
+            { year: year75Percent, label: '75% of Rent', cashflow: projections.find(p => p.year === year75Percent)?.netCashflow || 0, achieved: year75Percent <= currentYear },
+            { year: year100Percent, label: '100% of Rent', cashflow: projections.find(p => p.year === year100Percent)?.netCashflow || 0, achieved: year100Percent <= currentYear }
           ];
           
           return (
