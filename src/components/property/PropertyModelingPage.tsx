@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { propertyService } from "@/lib/services/propertyService";
-import { Property } from "@/types";
+import { Property, Loan } from "@/types";
+import LoanManagement from "./LoanManagement";
 
 // Types
 interface PropertyData {
@@ -145,31 +146,60 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     } as any;
   }, [property, propertyId]);
 
-  // Loan data from property or defaults
-  const loanData = useMemo(() => {
-    if (property?.loan) {
+  // Multiple loans support - get all loans from property
+  const loans = useMemo(() => {
+    if (property?.loans && property.loans.length > 0) {
+      return property.loans;
+    } else if (property?.loan) {
+      // Backward compatibility - convert single loan to array
+      return [property.loan];
+    }
+    return [];
+  }, [property]);
+
+  // Aggregate loan data for calculations
+  const aggregatedLoanData = useMemo(() => {
+    if (loans.length === 0) {
       return {
-        principalAmount: property.loan.principal_amount,
-        interestRate: property.loan.interest_rate,
-        termYears: property.loan.term_years,
-        type: property.loan.type,
+        totalPrincipal: 0,
+        totalMonthlyPayment: 0,
+        hasLoans: false
       };
     }
-    
-    // Default loan data if no loan exists
+
+    let totalPrincipal = 0;
+    let totalMonthlyPayment = 0;
+
+    loans.forEach(loan => {
+      totalPrincipal += loan.principal_amount;
+      
+      // Calculate monthly payment for each loan
+      if (loan.principal_amount > 0 && loan.interest_rate > 0) {
+        const monthlyRate = loan.interest_rate / 100 / 12;
+        const totalPayments = loan.term_years * 12;
+        
+        if (loan.type === 'interest_only') {
+          totalMonthlyPayment += (loan.principal_amount * loan.interest_rate / 100) / 12;
+        } else {
+          const monthlyPayment = (loan.principal_amount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
+                               (Math.pow(1 + monthlyRate, totalPayments) - 1);
+          totalMonthlyPayment += monthlyPayment;
+        }
+      }
+    });
+
     return {
-      principalAmount: 0,
-      interestRate: 0,
-      termYears: 30,
-      type: "principal_interest" as const,
+      totalPrincipal,
+      totalMonthlyPayment,
+      hasLoans: true
     };
-  }, [property]);
+  }, [loans]);
 
   // Calculate projections
   const projections = useMemo(() => {
     const data: YearlyProjection[] = [];
     let cumulativeCashflow = 0;
-    let currentLoanBalance = loanData.principalAmount;
+    let currentLoanBalance = aggregatedLoanData.totalPrincipal;
     // Get rent and expenses from property data or use defaults
     let currentRent = property?.annual_rent || 0; // Annual rent
     let currentExpenses = property?.annual_expenses || 0; // Annual expenses
@@ -187,16 +217,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       let annualInterest = 0;
       let annualPrincipal = 0;
       
-      if (loanData.principalAmount > 0 && loanData.interestRate > 0) {
-        const monthlyRate = loanData.interestRate / 100 / 12;
-        const totalPayments = loanData.termYears * 12;
-        const monthlyPayment = (loanData.principalAmount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
-                             (Math.pow(1 + monthlyRate, totalPayments) - 1);
-        annualLoanPayment = monthlyPayment * 12;
+      if (aggregatedLoanData.hasLoans) {
+        // Use pre-calculated total monthly payment
+        annualLoanPayment = aggregatedLoanData.totalMonthlyPayment * 12;
         
-        // Update loan balance
-        annualInterest = currentLoanBalance * (loanData.interestRate / 100);
-        annualPrincipal = annualLoanPayment - annualInterest;
+        // Simplified interest calculation (weighted average would be more accurate)
+        const avgInterestRate = loans.length > 0 ? 
+          loans.reduce((sum, loan) => sum + loan.interest_rate, 0) / loans.length : 0;
+        
+        annualInterest = currentLoanBalance * (avgInterestRate / 100);
+        annualPrincipal = Math.max(0, annualLoanPayment - annualInterest);
         currentLoanBalance = Math.max(0, currentLoanBalance - annualPrincipal);
       }
       
@@ -222,7 +252,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     }
     
     return data;
-  }, [assumptions, propertyData, loanData]);
+  }, [assumptions, propertyData, aggregatedLoanData, loans]);
 
   // Calculate key metrics
   const breakEvenYear = projections.find(p => p.cumulativeCashflow >= 0)?.year || 2054;
@@ -285,8 +315,9 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       annualExpenses: property?.annual_expenses
     },
     loanData: {
-      principalAmount: loanData.principalAmount,
-      interestRate: loanData.interestRate
+      totalPrincipal: aggregatedLoanData.totalPrincipal,
+      totalMonthlyPayment: aggregatedLoanData.totalMonthlyPayment,
+      loansCount: loans.length
     },
     assumptions
   });
@@ -324,13 +355,13 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   }, []);
 
   // Helper function to check if property is fully modeled
-  const isPropertyFullyModeled = useCallback((prop: any, loan?: any) => {
+  const isPropertyFullyModeled = useCallback((prop: any, loans?: any[]) => {
     return prop && 
            prop.annual_rent > 0 && 
            prop.annual_expenses >= 0 && 
-           loan && 
-           loan.principal_amount > 0 && 
-           loan.interest_rate > 0;
+           loans && 
+           loans.length > 0 &&
+           loans.some(loan => loan.principal_amount > 0 && loan.interest_rate > 0);
   }, []);
 
   const handlePropertySave = useCallback(async (updatedPropertyData: PropertyData) => {
@@ -364,7 +395,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       setIsEditingProperty(false);
       
       // Check if property should be marked as fully modeled
-      if (isPropertyFullyModeled(updatedProperty, updatedProperty.loan)) {
+      if (isPropertyFullyModeled(updatedProperty, updatedProperty.loans || [updatedProperty.loan].filter(Boolean))) {
         try {
           await propertyService.updateCashflowStatus(propertyId, 'modeled');
           setProperty(prev => prev ? { ...prev, cashflow_status: 'modeled' } : null);
@@ -379,6 +410,44 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       alert('Failed to update property. Please try again.');
     }
   }, [propertyId, isPropertyFullyModeled]);
+
+  // Handle loan management changes
+  const handleLoansChange = useCallback(async (updatedLoans: Loan[]) => {
+    try {
+      // Update property with new loans array - loans are stored in the JSONB data column
+
+      // Update the property in the database
+      const response = await fetch(`/api/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          loans: updatedLoans
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update loans');
+      }
+
+      const { property: updatedProperty } = await response.json();
+      setProperty(updatedProperty);
+
+      // Check if property should be marked as fully modeled
+      if (isPropertyFullyModeled(updatedProperty, updatedLoans)) {
+        try {
+          await propertyService.updateCashflowStatus(propertyId, 'modeled');
+          setProperty(prev => prev ? { ...prev, cashflow_status: 'modeled' } : null);
+        } catch (err) {
+          console.warn('Failed to update cashflow status to modeled:', err);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating loans:', error);
+      alert('Failed to update loans. Please try again.');
+    }
+  }, [propertyId, property, isPropertyFullyModeled]);
 
   const handleLoanSave = useCallback(async (loanData: any) => {
     try {
@@ -523,15 +592,12 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               )}
             </section>
 
-            {/* Loan Details */}
-            <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Loan Details</h2>
-              {isEditingLoan ? (
-                <LoanEditForm loan={property?.loan} onSave={handleLoanSave} onCancel={() => setIsEditingLoan(false)} />
-              ) : (
-                <LoanInfoDisplay loan={property?.loan} onEdit={() => setIsEditingLoan(true)} />
-              )}
-            </section>
+            {/* Loan Management */}
+            <LoanManagement 
+              loans={loans}
+              onLoansChange={handleLoansChange}
+              propertyId={propertyId}
+            />
 
             {/* Strategy Selector */}
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
