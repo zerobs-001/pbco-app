@@ -558,7 +558,8 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           const year75Percent = projections.find(p => p.netCashflow >= initialRent * 0.75)?.year || 2054;
           const year100Percent = projections.find(p => p.netCashflow >= initialRent)?.year || 2054;
           
-          const currentYear = new Date().getFullYear();
+          // Use a fixed year to prevent hydration mismatch
+          const currentYear = 2024;
           const milestones = [
             { year: breakEvenYear, label: 'Break-even', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0, achieved: breakEvenYear <= currentYear },
             { year: year25Percent, label: '25% of Rent', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0, achieved: year25Percent <= currentYear },
@@ -567,18 +568,18 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
             { year: year100Percent, label: '100% of Rent', cashflow: projections.find(p => p.year === year100Percent)?.netCashflow || 0, achieved: year100Percent <= currentYear }
           ];
           
-          return (
-            <div className="relative">
-                        {/* Timeline line */}
-          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
-          
-          <div className="flex justify-between items-center relative">
-            {milestones.map((milestone, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md ${
-                  milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
-                }`}></div>
-                    <div className="text-center mt-4">
+                    return (
+            <div className="relative h-16">
+              {/* Timeline line */}
+              <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
+              
+              <div className="flex justify-between items-center relative h-full">
+                {milestones.map((milestone, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md relative z-10 ${
+                      milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
+                    }`}></div>
+                    <div className="text-center mt-6">
                       <div className="text-sm font-medium text-gray-700">{milestone.label}</div>
                       <div className="text-xs text-gray-500 mt-1">Year {milestone.year}</div>
                     </div>
