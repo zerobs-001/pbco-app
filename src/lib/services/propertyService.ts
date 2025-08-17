@@ -255,6 +255,10 @@ export class PropertyService {
       cashflow_status: propertyData.cashflow_status || 'not_modeled',
       created_at: dbProperty.created_at,
       updated_at: dbProperty.updated_at,
+      // Financial data from JSONB
+      annual_rent: propertyData.annual_rent,
+      annual_expenses: propertyData.annual_expenses,
+      description: propertyData.description,
       loan: dbProperty.loans?.[0] ? {
         id: dbProperty.loans[0].id,
         property_id: dbProperty.loans[0].property_id,

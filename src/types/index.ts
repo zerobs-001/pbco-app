@@ -61,6 +61,10 @@ export interface Property {
   cashflow_status: CashflowStatus;
   created_at: string;
   updated_at: string;
+  // Financial data from JSONB
+  annual_rent?: number;
+  annual_expenses?: number;
+  description?: string;
   // Related data
   loan?: Loan;
   property_metrics?: PropertyMetrics;

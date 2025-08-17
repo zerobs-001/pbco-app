@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { propertyService } from "@/lib/services/propertyService";
+import { Property } from "@/types";
 
 // Types
 interface PropertyData {
@@ -69,32 +71,88 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   const [assumptions, setAssumptions] = useState<ModelingAssumptions>(DEFAULT_ASSUMPTIONS);
   const [selectedStrategy, setSelectedStrategy] = useState("buy_hold");
   const [isEditingProperty, setIsEditingProperty] = useState(false);
-  const [propertyData, setPropertyData] = useState<PropertyData>({
-    id: propertyId,
-    name: "Sydney House",
-    type: "Residential House",
-    purchasePrice: 850000,
-    currentValue: 920000,
-    purchaseDate: "2023-01-15",
-    address: "123 Sydney Street, Sydney NSW 2000",
-    strategy: "buy_hold",
-  });
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock loan data
-  const loanData = {
-    principalAmount: 680000,
-    interestRate: 5.5,
-    termYears: 30,
-    type: "principal_interest",
-  };
+  // Fetch property data
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        setLoading(true);
+        const propertyData = await propertyService.getPropertyById(propertyId);
+        if (propertyData) {
+          setProperty(propertyData);
+          setSelectedStrategy(propertyData.strategy);
+        } else {
+          setError('Property not found');
+        }
+      } catch (err) {
+        console.error('Error fetching property:', err);
+        setError('Failed to load property data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperty();
+  }, [propertyId]);
+
+  // Convert Property to PropertyData for calculations
+  const propertyData: PropertyData = useMemo(() => {
+    if (!property) {
+      return {
+        id: propertyId,
+        name: "Loading...",
+        type: "Unknown",
+        purchasePrice: 0,
+        currentValue: 0,
+        purchaseDate: "2024-01-01",
+        address: "",
+        strategy: "buy_hold",
+      };
+    }
+
+    return {
+      id: property.id,
+      name: property.name,
+      type: property.type,
+      purchasePrice: property.purchase_price,
+      currentValue: property.current_value,
+      purchaseDate: property.purchase_date,
+      address: property.address || "",
+      strategy: property.strategy,
+    };
+  }, [property, propertyId]);
+
+  // Loan data from property or defaults
+  const loanData = useMemo(() => {
+    if (property?.loan) {
+      return {
+        principalAmount: property.loan.principal_amount,
+        interestRate: property.loan.interest_rate,
+        termYears: property.loan.term_years,
+        type: property.loan.type,
+      };
+    }
+    
+    // Default loan data if no loan exists
+    return {
+      principalAmount: 0,
+      interestRate: 0,
+      termYears: 30,
+      type: "principal_interest" as const,
+    };
+  }, [property]);
 
   // Calculate projections
   const projections = useMemo(() => {
     const data: YearlyProjection[] = [];
     let cumulativeCashflow = 0;
     let currentLoanBalance = loanData.principalAmount;
-    let currentRent = 45000; // Annual rent
-    let currentExpenses = 12000; // Annual expenses
+    // Get rent and expenses from property data or use defaults
+    let currentRent = property?.annual_rent || 45000; // Annual rent
+    let currentExpenses = property?.annual_expenses || 12000; // Annual expenses
 
     for (let year = 2024; year <= 2054; year++) {
       const yearIndex = year - 2024;
@@ -189,6 +247,37 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     setAssumptions(PRESET_PROFILES[preset]);
   }, []);
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Loading property data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-2xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-[#111827] mb-2">Error Loading Property</h2>
+          <p className="text-[#6b7280] mb-4">{error}</p>
+          <a 
+            href="/dashboard" 
+            className="inline-flex items-center px-4 py-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8]"
+          >
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-[#111827]">
       {/* Header */}
@@ -257,7 +346,10 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold mb-4">Property Details</h2>
               {isEditingProperty ? (
-                <PropertyEditForm property={propertyData} onSave={(data) => setPropertyData(data)} />
+                <PropertyEditForm property={propertyData} onSave={(data) => {
+                  // TODO: Implement property update functionality
+                  console.log('Property update:', data);
+                }} />
               ) : (
                 <PropertyInfoDisplay property={propertyData} />
               )}
