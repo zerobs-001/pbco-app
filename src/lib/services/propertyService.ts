@@ -139,22 +139,21 @@ export class PropertyService {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
-    // Prepare property data - using the correct column names from our schema
+    // Prepare property data - using the current schema (data JSONB column)
     const propertyData = {
       portfolio_id: portfolioId,
-      name: data.name.trim(),
-      type: data.type,
-      address: data.address?.trim() || null,
-      purchase_price: data.purchase_price,
-      current_value: data.current_value,
-      purchase_date: data.purchase_date,
-      strategy: data.strategy,
-      cashflow_status: 'not_modeled' as const,
-      // Store additional data in a structured format
-      financial_data: {
+      data: {
+        name: data.name.trim(),
+        type: data.type,
+        address: data.address?.trim() || null,
+        purchase_price: data.purchase_price,
+        current_value: data.current_value,
+        purchase_date: data.purchase_date,
+        strategy: data.strategy,
         annual_rent: data.annual_rent,
         annual_expenses: data.annual_expenses,
-        description: data.description?.trim() || null
+        description: data.description?.trim() || null,
+        cashflow_status: 'not_modeled'
       }
     };
 
@@ -279,17 +278,18 @@ export class PropertyService {
    * Map database property to TypeScript interface
    */
   private mapDatabasePropertyToType(dbProperty: any): Property {
+    const propertyData = dbProperty.data || {};
     return {
       id: dbProperty.id,
       portfolio_id: dbProperty.portfolio_id,
-      name: dbProperty.name,
-      type: dbProperty.type,
-      address: dbProperty.address,
-      purchase_price: dbProperty.purchase_price,
-      current_value: dbProperty.current_value,
-      purchase_date: dbProperty.purchase_date,
-      strategy: dbProperty.strategy,
-      cashflow_status: dbProperty.cashflow_status,
+      name: propertyData.name,
+      type: propertyData.type,
+      address: propertyData.address,
+      purchase_price: propertyData.purchase_price,
+      current_value: propertyData.current_value,
+      purchase_date: propertyData.purchase_date,
+      strategy: propertyData.strategy,
+      cashflow_status: propertyData.cashflow_status || 'not_modeled',
       created_at: dbProperty.created_at,
       updated_at: dbProperty.updated_at,
       loan: dbProperty.loans?.[0] ? {
