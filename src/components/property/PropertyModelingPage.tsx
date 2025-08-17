@@ -78,6 +78,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   const [assumptions, setAssumptions] = useState<ModelingAssumptions>(DEFAULT_ASSUMPTIONS);
   const [selectedStrategy, setSelectedStrategy] = useState("buy_hold");
   const [isEditingProperty, setIsEditingProperty] = useState(false);
+  const [isEditingLoan, setIsEditingLoan] = useState(false);
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -345,6 +346,34 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     }
   }, [propertyId]);
 
+  const handleLoanSave = useCallback(async (loanData: any) => {
+    try {
+      const response = await fetch(`/api/properties/${propertyId}/loan`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loanData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update loan');
+      }
+
+      const { property: updatedProperty } = await response.json();
+      
+      // Update local state
+      setProperty(updatedProperty);
+      setIsEditingLoan(false);
+      
+      console.log('Loan updated successfully');
+    } catch (error) {
+      console.error('Error updating loan:', error);
+      alert('Failed to update loan. Please try again.');
+    }
+  }, [propertyId]);
+
   // Show loading state
   if (loading) {
     return (
@@ -447,6 +476,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
                 <PropertyEditForm property={propertyData} onSave={handlePropertySave} />
               ) : (
                 <PropertyInfoDisplay property={propertyData} />
+              )}
+            </section>
+
+            {/* Loan Details */}
+            <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold mb-4">Loan Details</h2>
+              {isEditingLoan ? (
+                <LoanEditForm loan={property?.loan} onSave={handleLoanSave} onCancel={() => setIsEditingLoan(false)} />
+              ) : (
+                <LoanInfoDisplay loan={property?.loan} onEdit={() => setIsEditingLoan(true)} />
               )}
             </section>
 
@@ -1091,5 +1130,172 @@ function IconDownload({ className }: { className?: string }) {
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
+  );
+}
+
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  );
+}
+
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+// Loan Info Display Component
+function LoanInfoDisplay({ loan, onEdit }: { loan?: any; onEdit: () => void }) {
+  if (!loan) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center py-6 text-[#6b7280]">
+          <p className="text-sm mb-3">No loan configured</p>
+          <button
+            onClick={onEdit}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]"
+          >
+            <IconPlus className="h-4 w-4" />
+            Add Loan
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 text-sm">
+        <div className="flex justify-between">
+          <span className="text-[#6b7280]">Loan Type:</span>
+          <span className="font-medium">{loan.type === 'principal_interest' ? 'P&I' : 'Interest Only'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[#6b7280]">Principal:</span>
+          <span className="font-medium">${loan.principal_amount?.toLocaleString() || '0'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[#6b7280]">Interest Rate:</span>
+          <span className="font-medium">{loan.interest_rate || 0}%</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[#6b7280]">Term:</span>
+          <span className="font-medium">{loan.term_years || 0} years</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[#6b7280]">Start Date:</span>
+          <span className="font-medium">{loan.start_date || 'Not set'}</span>
+        </div>
+      </div>
+      <button
+        onClick={onEdit}
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm"
+      >
+        <IconEdit className="h-4 w-4" />
+        Edit Loan
+      </button>
+    </div>
+  );
+}
+
+// Loan Edit Form Component
+function LoanEditForm({ loan, onSave, onCancel }: { 
+  loan?: any; 
+  onSave: (data: any) => void; 
+  onCancel: () => void; 
+}) {
+  const [formData, setFormData] = useState({
+    type: loan?.type || 'principal_interest',
+    principal_amount: loan?.principal_amount || 0,
+    interest_rate: loan?.interest_rate || 0,
+    term_years: loan?.term_years || 30,
+    start_date: loan?.start_date || new Date().toISOString().split('T')[0]
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-[#111827] mb-1">Loan Type</label>
+        <select
+          value={formData.type || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+          className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+        >
+          <option value="principal_interest">Principal & Interest</option>
+          <option value="interest_only">Interest Only</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-[#111827] mb-1">Principal Amount</label>
+        <input
+          type="number"
+          value={formData.principal_amount || 0}
+          onChange={(e) => setFormData(prev => ({ ...prev, principal_amount: parseFloat(e.target.value) || 0 }))}
+          className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+          placeholder="0"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-[#111827] mb-1">Interest Rate (%)</label>
+        <input
+          type="number"
+          value={formData.interest_rate || 0}
+          onChange={(e) => setFormData(prev => ({ ...prev, interest_rate: parseFloat(e.target.value) || 0 }))}
+          className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+          step="0.01"
+          placeholder="0.00"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-[#111827] mb-1">Term (Years)</label>
+        <input
+          type="number"
+          value={formData.term_years || 0}
+          onChange={(e) => setFormData(prev => ({ ...prev, term_years: parseInt(e.target.value) || 0 }))}
+          className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+          placeholder="30"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-[#111827] mb-1">Start Date</label>
+        <input
+          type="date"
+          value={formData.start_date || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+          className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+        />
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <button
+          type="submit"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]"
+        >
+          <IconCheck className="h-4 w-4" />
+          Save Changes
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#111827] hover:shadow-sm"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
