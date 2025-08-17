@@ -579,9 +579,8 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                       milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
                     }`}></div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-gray-900">${(milestone.cashflow / 1000).toFixed(1)}K</div>
-                      <div className="text-xs text-gray-500">{milestone.label}</div>
-                      <div className="text-xs text-gray-400">Year {milestone.year}</div>
+                      <div className="text-sm font-medium text-gray-700">{milestone.label}</div>
+                      <div className="text-xs text-gray-500">Year {milestone.year}</div>
                     </div>
                   </div>
                 ))}
