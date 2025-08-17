@@ -46,6 +46,13 @@ interface StrategyComparison {
   keyDisadvantages: string[];
 }
 
+interface Milestone {
+  name: string;
+  year: number;
+  achieved: boolean;
+  target: number;
+}
+
 // Constants
 const DEFAULT_ASSUMPTIONS: ModelingAssumptions = {
   rentGrowthRate: 3.5,
@@ -212,6 +219,46 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       return npv + projection.netCashflow / discountFactor;
     }, 0);
   }, [projections, assumptions.discountRate]);
+
+  // Calculate milestones based on actual projections
+  const milestones = useMemo(() => {
+    const initialRent = property?.annual_rent || 45000;
+    const milestoneTargets = [
+      { name: 'Break-even', target: 0, type: 'cumulative' },
+      { name: '25% of Rent', target: initialRent * 0.25, type: 'annual' },
+      { name: '50% of Rent', target: initialRent * 0.5, type: 'annual' },
+      { name: '75% of Rent', target: initialRent * 0.75, type: 'annual' },
+      { name: '100% of Rent', target: initialRent, type: 'annual' }
+    ];
+
+    return milestoneTargets.map(milestone => {
+      let achievedYear = 2054;
+      let achieved = false;
+
+      if (milestone.type === 'cumulative') {
+        // For break-even, find when cumulative cashflow becomes positive
+        const breakEvenProjection = projections.find(p => p.cumulativeCashflow >= milestone.target);
+        if (breakEvenProjection) {
+          achievedYear = breakEvenProjection.year;
+          achieved = true;
+        }
+      } else {
+        // For annual targets, find when annual cashflow reaches the target
+        const targetProjection = projections.find(p => p.netCashflow >= milestone.target);
+        if (targetProjection) {
+          achievedYear = targetProjection.year;
+          achieved = true;
+        }
+      }
+
+      return {
+        name: milestone.name,
+        year: achievedYear,
+        achieved,
+        target: milestone.target
+      };
+    });
+  }, [projections, property?.annual_rent]);
 
   // Debug: Log chart data
   console.log('Chart Debug:', {
@@ -649,51 +696,46 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       </div>
 
       {/* Key Milestones Timeline */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center">
-          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          Financial Milestones
-        </h3>
+      <MilestonesTimeline milestones={milestones} />
+    </div>
+  );
+}
+
+function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center">
+        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        Financial Milestones
+      </h3>
+      
+      {/* Timeline with Perfect Alignment */}
+      <div className="relative h-40">
+        {/* Timeline line - positioned exactly in center */}
+        <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
         
-                {/* Timeline with Perfect Alignment */}
-        <div className="relative h-40">
-          {/* Timeline line - positioned exactly in center */}
-          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
-          
-          {/* Nodes positioned absolutely on the line */}
-          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between items-center">
-            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-            <div className="w-4 h-4 rounded-full border-2 border-blue-600 shadow-md bg-gray-400"></div>
-          </div>
-          
-          {/* Labels positioned below the line */}
-          <div className="absolute left-0 right-0 top-1/2 transform translate-y-4 flex justify-between">
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-700">Break-even</div>
-              <div className="text-xs text-gray-500">Year 2029</div>
+        {/* Nodes positioned absolutely on the line */}
+        <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between items-center">
+          {milestones.map((milestone, index) => (
+            <div 
+              key={index}
+              className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md ${
+                milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
+              }`}
+            ></div>
+          ))}
+        </div>
+        
+        {/* Labels positioned below the line */}
+        <div className="absolute left-0 right-0 top-1/2 transform translate-y-4 flex justify-between">
+          {milestones.map((milestone, index) => (
+            <div key={index} className="text-center">
+              <div className="text-sm font-medium text-gray-700">{milestone.name}</div>
+              <div className="text-xs text-gray-500">Year {milestone.year}</div>
             </div>
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-700">25% of Rent</div>
-              <div className="text-xs text-gray-500">Year 2032</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-700">50% of Rent</div>
-              <div className="text-xs text-gray-500">Year 2038</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-700">75% of Rent</div>
-              <div className="text-xs text-gray-500">Year 2045</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-700">100% of Rent</div>
-              <div className="text-xs text-gray-500">Year 2052</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
