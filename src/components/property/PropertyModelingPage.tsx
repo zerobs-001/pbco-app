@@ -570,16 +570,16 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           
                     return (
             <div className="relative h-20">
-              {/* Timeline line - positioned to go through center of nodes */}
-              <div className="absolute left-0 right-0 top-8 h-0.5 bg-gray-200"></div>
+              {/* Timeline line */}
+              <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
               
-              <div className="flex justify-between items-start relative h-full">
+              <div className="flex justify-between items-center relative h-full">
                 {milestones.map((milestone, index) => (
                   <div key={index} className="flex flex-col items-center">
-                    {/* Node positioned to center on the line */}
+                    {/* Node centered on the line */}
                     <div className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md relative z-10 ${
                       milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
-                    }`} style={{ marginTop: '6px' }}></div>
+                    }`}></div>
                     <div className="text-center mt-4">
                       <div className="text-sm font-medium text-gray-700">{milestone.label}</div>
                       <div className="text-xs text-gray-500 mt-1">Year {milestone.year}</div>
