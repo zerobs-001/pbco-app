@@ -66,7 +66,8 @@ export interface Property {
   annual_expenses?: number;
   description?: string;
   // Related data
-  loan?: Loan;
+  loan?: Loan; // For backward compatibility - first/primary loan
+  loans?: Loan[]; // Support for multiple loans
   property_metrics?: PropertyMetrics;
   cashflow_projection?: PropertyCashflowProjection;
 }

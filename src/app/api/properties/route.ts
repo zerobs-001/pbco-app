@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { portfolioId, propertyData } = body;
+    const { portfolioId, propertyData, loanData } = body;
 
     if (!portfolioId || !propertyData) {
       return NextResponse.json(
@@ -127,6 +127,42 @@ export async function POST(request: NextRequest) {
         { error: `Failed to create property: ${error.message}` },
         { status: 500 }
       );
+    }
+
+    // If loan data is provided, create the loan and embed it in the property data
+    if (loanData) {
+      console.log('Creating loan with property:', { propertyId: property.id, loanData });
+      
+      const newLoan = {
+        id: `loan_${Date.now()}`, // Generate a simple ID for the loan
+        ...loanData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Store loan data in the property's JSONB data column with support for multiple loans
+      const updatedPropertyData = {
+        ...propertyData,
+        loans: [newLoan], // Initialize with first loan in array
+        loan: newLoan // Keep backward compatibility
+      };
+
+      // Update the property with the embedded loan data
+      const { data: updatedProperty, error: updateError } = await supabase
+        .from('properties')
+        .update({ data: updatedPropertyData })
+        .eq('id', property.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error adding loan to property:', updateError);
+        // Don't fail the whole request - property was created successfully
+        console.warn('Property created but loan creation failed');
+      } else {
+        // Use the updated property with loan data
+        property.data = updatedPropertyData;
+      }
     }
 
     return NextResponse.json({ property }, { status: 201 });

@@ -154,6 +154,15 @@ export class PropertyService {
       cashflow_status: 'not_modeled'
     };
 
+    // Prepare loan data if provided
+    const loanData = (data.loan_amount && data.loan_amount > 0) ? {
+      type: data.loan_type || 'principal_interest',
+      principal_amount: data.loan_amount,
+      interest_rate: data.interest_rate || 0,
+      term_years: data.loan_term || 30,
+      start_date: data.purchase_date // Use purchase date as loan start date
+    } : null;
+
     try {
       // Use the server-side API route to bypass RLS
       const response = await fetch('/api/properties', {
@@ -163,7 +172,8 @@ export class PropertyService {
         },
         body: JSON.stringify({
           portfolioId,
-          propertyData
+          propertyData,
+          loanData
         }),
       });
 
@@ -277,6 +287,9 @@ export class PropertyService {
       annual_rent: dbProperty.annual_rent || propertyData.annual_rent,
       annual_expenses: dbProperty.annual_expenses || propertyData.annual_expenses,
       description: dbProperty.description || propertyData.description,
+      // Support for multiple loans
+      loans: dbProperty.loans || propertyData.loans || [],
+      // Backward compatibility - first loan
       loan: dbProperty.loans?.[0] ? {
         id: dbProperty.loans[0].id,
         property_id: dbProperty.loans[0].property_id,
@@ -297,7 +310,7 @@ export class PropertyService {
         start_date: dbProperty.loan.start_date,
         created_at: dbProperty.loan.created_at,
         updated_at: dbProperty.loan.updated_at
-      } : undefined
+      } : propertyData.loans?.[0] ? propertyData.loans[0] : propertyData.loan
     };
   }
 }
