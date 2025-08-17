@@ -696,7 +696,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
       </div>
 
       {/* Key Milestones Timeline */}
-      <MilestonesTimeline milestones={milestones} />
+      <MilestonesTimeline milestones={[]} />
     </div>
   );
 }
