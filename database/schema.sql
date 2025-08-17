@@ -8,18 +8,19 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TYPE user_role AS ENUM ('client', 'admin');
 CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
 CREATE TYPE property_type AS ENUM (
-  'RESIDENTIAL_HOUSE',
-  'RESIDENTIAL_UNIT', 
-  'COMMERCIAL_OFFICE',
-  'COMMERCIAL_RETAIL',
-  'COMMERCIAL_INDUSTRIAL'
+  'residential_house',
+  'residential_unit', 
+  'commercial_office',
+  'commercial_retail',
+  'commercial_industrial',
+  'mixed_use'
 );
 CREATE TYPE investment_strategy AS ENUM (
-  'BUY_AND_HOLD',
-  'MANUFACTURE_EQUITY',
-  'VALUE_ADD_COMMERCIAL'
+  'buy_hold',
+  'manufacture_equity',
+  'value_add_commercial'
 );
-CREATE TYPE loan_type AS ENUM ('INTEREST_ONLY', 'PRINCIPAL_AND_INTEREST');
+CREATE TYPE loan_type AS ENUM ('interest_only', 'principal_interest');
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE public.users (
@@ -57,7 +58,15 @@ CREATE TABLE public.portfolios (
 CREATE TABLE public.properties (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   portfolio_id UUID REFERENCES public.portfolios(id) ON DELETE CASCADE NOT NULL,
-  data JSONB NOT NULL,
+  name TEXT NOT NULL,
+  type property_type NOT NULL,
+  address TEXT,
+  purchase_price DECIMAL(12,2) NOT NULL,
+  current_value DECIMAL(12,2) NOT NULL,
+  purchase_date DATE NOT NULL,
+  strategy investment_strategy NOT NULL,
+  cashflow_status TEXT DEFAULT 'not_modeled',
+  financial_data JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -66,7 +75,12 @@ CREATE TABLE public.properties (
 CREATE TABLE public.loans (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   property_id UUID REFERENCES public.properties(id) ON DELETE CASCADE NOT NULL,
-  data JSONB NOT NULL,
+  type loan_type NOT NULL,
+  principal_amount DECIMAL(12,2) NOT NULL,
+  interest_rate DECIMAL(5,4) NOT NULL,
+  term_years INTEGER NOT NULL,
+  start_date DATE NOT NULL,
+  rate_step_ups JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
