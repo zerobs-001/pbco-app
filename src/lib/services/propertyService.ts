@@ -204,23 +204,23 @@ export class PropertyService {
    * Get a single property by ID
    */
   async getPropertyById(propertyId: string): Promise<Property | null> {
-    const { data: property, error } = await this.supabase
-      .from('properties')
-      .select(`
-        *,
-        loans (*)
-      `)
-      .eq('id', propertyId)
-      .single();
+    try {
+      const response = await fetch(`/api/properties/${propertyId}`);
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null; // Property not found
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // Property not found
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-      throw new Error(`Failed to fetch property: ${error.message}`);
-    }
 
-    return this.mapDatabasePropertyToType(property);
+      const { property } = await response.json();
+      return property;
+    } catch (error) {
+      console.error('Error fetching property:', error);
+      throw error;
+    }
   }
 
   /**
