@@ -407,32 +407,31 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
             const isPositive = cashflow >= 0;
             const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
             // Convert percentage to pixels and round to prevent hydration mismatch
-            const barHeight = Math.max(Math.round((heightPercent / 100) * 80), 5); // Max 80px, min 5px
+            const barHeight = Math.max(Math.round((heightPercent / 100) * 40), 3); // Max 40px, min 3px
             
             return (
               <div key={projection.year} className="flex flex-col items-center flex-1 relative">
-                {/* Bar container positioned relative to x-axis */}
-                <div className="flex flex-col items-center" style={{ 
-                  transform: isPositive ? 'translateY(-50%)' : 'translateY(50%)',
-                  marginTop: isPositive ? '0' : `${barHeight}px`,
-                  marginBottom: isPositive ? `${barHeight}px` : '0'
-                }}>
-                  {/* Bar */}
-                  <div 
-                    className={`w-full rounded-t transition-all duration-200 ${
-                      isPositive ? 'bg-blue-500' : 'bg-gray-400'
-                    }`}
-                    style={{ height: `${barHeight}px` }}
-                  ></div>
-                </div>
+                {/* Bar positioned above or below x-axis */}
+                <div 
+                  className={`w-full rounded-t transition-all duration-200 ${
+                    isPositive ? 'bg-blue-500' : 'bg-gray-400'
+                  }`}
+                  style={{ 
+                    height: `${barHeight}px`,
+                    position: 'absolute',
+                    bottom: isPositive ? '50%' : 'auto',
+                    top: isPositive ? 'auto' : '50%',
+                    transform: isPositive ? 'translateY(0)' : 'translateY(0)'
+                  }}
+                ></div>
                 
                 {/* Year label */}
-                <div className="text-xs text-[#6b7280] mt-2 text-center">
+                <div className="text-xs text-[#6b7280] mt-2 text-center absolute bottom-0">
                   {projection.year}
                 </div>
                 
                 {/* Value label */}
-                <div className="text-xs font-medium mt-1 text-center">
+                <div className="text-xs font-medium mt-1 text-center absolute bottom-6">
                   ${(cashflow / 1000).toFixed(1)}K
                 </div>
               </div>
