@@ -5,6 +5,18 @@ import { propertyService } from "@/lib/services/propertyService";
 import { Property, Loan } from "@/types";
 import LoanManagement from "./LoanManagement";
 
+// Safe number formatting to prevent hydration mismatches
+const formatNumber = (num: number, decimals: number = 0): string => {
+  if (typeof window === 'undefined') return '0'; // SSR fallback
+  return num.toFixed(decimals);
+};
+
+const formatCurrency = (amount: number, showDecimals: boolean = false): string => {
+  if (typeof window === 'undefined') return '$0'; // SSR fallback
+  const decimals = showDecimals ? 1 : 0;
+  return `$${(amount / 1000).toFixed(decimals)}K`;
+};
+
 // Types
 interface PropertyData {
   id: string;
@@ -83,6 +95,12 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Client-side mount detection
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch property data
   useEffect(() => {
@@ -513,7 +531,8 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   }, [propertyId, isPropertyFullyModeled]);
 
   // Show loading state
-  if (loading) {
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
@@ -678,19 +697,19 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               />
               <MetricCard 
                 label="Net Present Value" 
-                value={`$${(netPresentValue / 1000).toFixed(0)}K`} 
+                value={formatCurrency(netPresentValue)} 
                 accent="green"
                 helper={`${assumptions.discountRate}% discount rate`}
               />
               <MetricCard 
                 label="Annual Cashflow" 
-                value={`$${(projections[0]?.netCashflow / 1000).toFixed(1)}K`} 
+                value={formatCurrency(projections[0]?.netCashflow || 0, true)} 
                 accent="orange"
                 helper="Year 1 projection"
               />
               <MetricCard 
                 label="Property Value" 
-                value={`$${(propertyData.currentValue / 1000).toFixed(0)}K`} 
+                value={formatCurrency(propertyData.currentValue)} 
                 accent="purple"
                 helper="Current market value"
               />
@@ -779,15 +798,15 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           
           {/* Y-axis labels */}
           <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-gray-500 pointer-events-none w-12">
-            <div className="text-right pr-2">${(maxCashflow / 1000).toFixed(0)}K</div>
-            <div className="text-right pr-2">${((maxCashflow * 0.75) / 1000).toFixed(0)}K</div>
-            <div className="text-right pr-2">${((maxCashflow * 0.5) / 1000).toFixed(0)}K</div>
-            <div className="text-right pr-2">${((maxCashflow * 0.25) / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">{formatCurrency(maxCashflow)}</div>
+            <div className="text-right pr-2">{formatCurrency(maxCashflow * 0.75)}</div>
+            <div className="text-right pr-2">{formatCurrency(maxCashflow * 0.5)}</div>
+            <div className="text-right pr-2">{formatCurrency(maxCashflow * 0.25)}</div>
             <div className="text-right pr-2">$0</div>
-            <div className="text-right pr-2">-${((maxCashflow * 0.25) / 1000).toFixed(0)}K</div>
-            <div className="text-right pr-2">-${((maxCashflow * 0.5) / 1000).toFixed(0)}K</div>
-            <div className="text-right pr-2">-${((maxCashflow * 0.75) / 1000).toFixed(0)}K</div>
-            <div className="text-right pr-2">-${(maxCashflow / 1000).toFixed(0)}K</div>
+            <div className="text-right pr-2">-{formatCurrency(maxCashflow * 0.25).substring(1)}</div>
+            <div className="text-right pr-2">-{formatCurrency(maxCashflow * 0.5).substring(1)}</div>
+            <div className="text-right pr-2">-{formatCurrency(maxCashflow * 0.75).substring(1)}</div>
+            <div className="text-right pr-2">-{formatCurrency(maxCashflow).substring(1)}</div>
           </div>
           
           {chartData.map((projection, index) => {
@@ -819,7 +838,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
                 {/* Hover tooltip */}
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                   <div className="font-medium">{projection.year}</div>
-                  <div>${(cashflow / 1000).toFixed(1)}K</div>
+                  <div>{formatCurrency(cashflow, true)}</div>
                 </div>
                 
                 {/* Year label - positioned below x-axis for negative, above for positive */}
@@ -896,7 +915,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-orange-700 uppercase tracking-wide">Peak Cashflow</p>
-              <p className="text-2xl font-bold text-orange-900">${(maxCashflow / 1000).toFixed(0)}K</p>
+              <p className="text-2xl font-bold text-orange-900">{formatCurrency(maxCashflow)}</p>
               <p className="text-xs text-orange-600">Maximum annual cashflow</p>
             </div>
             <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
@@ -971,11 +990,11 @@ function PropertyInfoDisplay({ property }: { property: PropertyData }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-[#6b7280]">Purchase Price</label>
-          <p className="text-sm font-medium text-[#111827]">${(property.purchasePrice / 1000).toFixed(0)}K</p>
+          <p className="text-sm font-medium text-[#111827]">{formatCurrency(property.purchasePrice)}</p>
         </div>
         <div>
           <label className="block text-xs font-medium text-[#6b7280]">Current Value</label>
-          <p className="text-sm font-medium text-[#111827]">${(property.currentValue / 1000).toFixed(0)}K</p>
+          <p className="text-sm font-medium text-[#111827]">{formatCurrency(property.currentValue)}</p>
         </div>
       </div>
     </div>
@@ -1194,9 +1213,9 @@ function StrategyComparisonTable({ comparisons }: { comparisons: StrategyCompari
                 </div>
               </td>
               <td className="py-3 px-4 text-sm text-[#111827]">{comparison.breakEvenYear}</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">${(comparison.netPresentValue / 1000).toFixed(0)}K</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">{comparison.internalRateOfReturn.toFixed(1)}%</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">${(comparison.annualCashflow / 1000).toFixed(1)}K</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatCurrency(comparison.netPresentValue)}</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatNumber(comparison.internalRateOfReturn, 1)}%</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatCurrency(comparison.annualCashflow, true)}</td>
               <td className="py-3 px-4">
                 <div className="text-xs">
                   <div className="text-green-600">✓ {comparison.keyAdvantages[0]}</div>
@@ -1230,15 +1249,15 @@ function YearlyBreakdownTable({ projections }: { projections: YearlyProjection[]
           {projections.map((projection) => (
             <tr key={projection.year} className="hover:bg-[#f9fafb]">
               <td className="py-3 px-4 font-medium text-[#111827]">{projection.year}</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">${(projection.rentIncome / 1000).toFixed(1)}K</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">${(projection.expenses / 1000).toFixed(1)}K</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">${(projection.loanPayment / 1000).toFixed(1)}K</td>
-              <td className="py-3 px-4 text-sm text-[#111827]">${(projection.taxLiability / 1000).toFixed(1)}K</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatCurrency(projection.rentIncome, true)}</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatCurrency(projection.expenses, true)}</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatCurrency(projection.loanPayment, true)}</td>
+              <td className="py-3 px-4 text-sm text-[#111827]">{formatCurrency(projection.taxLiability, true)}</td>
               <td className={`py-3 px-4 text-sm font-medium ${projection.netCashflow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${(projection.netCashflow / 1000).toFixed(1)}K
+                {formatCurrency(projection.netCashflow, true)}
               </td>
               <td className={`py-3 px-4 text-sm font-medium ${projection.cumulativeCashflow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${(projection.cumulativeCashflow / 1000).toFixed(1)}K
+                {formatCurrency(projection.cumulativeCashflow, true)}
               </td>
             </tr>
           ))}
@@ -1334,7 +1353,7 @@ function LoanInfoDisplay({ loan, onEdit }: { loan?: any; onEdit: () => void }) {
         </div>
         <div className="flex justify-between">
           <span className="text-[#6b7280]">Principal:</span>
-          <span className="font-medium">${loan.principal_amount?.toLocaleString() || '0'}</span>
+          <span className="font-medium">{formatCurrency(loan.principal_amount || 0)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-[#6b7280]">Interest Rate:</span>
