@@ -558,7 +558,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           const year75Percent = projections.find(p => p.netCashflow >= initialRent * 0.75)?.year || 2054;
           const year100Percent = projections.find(p => p.netCashflow >= initialRent)?.year || 2054;
           
-          const currentYear = 2025;
+          const currentYear = new Date().getFullYear();
           const milestones = [
             { year: breakEvenYear, label: 'Break-even', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0, achieved: breakEvenYear <= currentYear },
             { year: year25Percent, label: '25% of Rent', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0, achieved: year25Percent <= currentYear },
