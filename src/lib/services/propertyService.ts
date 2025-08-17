@@ -139,77 +139,40 @@ export class PropertyService {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
-    // Prepare property data - using the current schema (data JSONB column)
+    // Prepare property data for the API
     const propertyData = {
-      portfolio_id: portfolioId,
-      data: {
-        name: data.name.trim(),
-        type: data.type,
-        address: data.address?.trim() || null,
-        purchase_price: data.purchase_price,
-        current_value: data.current_value,
-        purchase_date: data.purchase_date,
-        strategy: data.strategy,
-        annual_rent: data.annual_rent,
-        annual_expenses: data.annual_expenses,
-        description: data.description?.trim() || null,
-        cashflow_status: 'not_modeled'
-      }
+      name: data.name.trim(),
+      type: data.type,
+      address: data.address?.trim() || null,
+      purchase_price: data.purchase_price,
+      current_value: data.current_value,
+      purchase_date: data.purchase_date,
+      strategy: data.strategy,
+      annual_rent: data.annual_rent,
+      annual_expenses: data.annual_expenses,
+      description: data.description?.trim() || null,
+      cashflow_status: 'not_modeled'
     };
 
     try {
-      // Insert property
-      const { data: property, error: propertyError } = await this.supabase
-        .from('properties')
-        .insert(propertyData)
-        .select()
-        .single();
+      // Use the server-side API route to bypass RLS
+      const response = await fetch('/api/properties', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          portfolioId,
+          propertyData
+        }),
+      });
 
-      if (propertyError) {
-        // If it's a schema cache issue, try to refresh and retry
-        if (propertyError.message.includes('schema cache')) {
-          console.log('Schema cache issue detected, retrying...');
-          // Force a schema refresh by making a simple query
-          await this.supabase.from('properties').select('id').limit(1);
-          
-          // Retry the insert
-          const { data: retryProperty, error: retryError } = await this.supabase
-            .from('properties')
-            .insert(propertyData)
-            .select()
-            .single();
-
-          if (retryError) {
-            throw new Error(`Failed to create property after retry: ${retryError.message}`);
-          }
-          
-          return this.mapDatabasePropertyToType(retryProperty);
-        }
-        
-        throw new Error(`Failed to create property: ${propertyError.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      // Create loan if loan details are provided
-      if (data.loan_amount && data.interest_rate && data.loan_term && data.loan_type) {
-        const loanData = {
-          property_id: property.id,
-          type: data.loan_type,
-          principal_amount: data.loan_amount,
-          interest_rate: data.interest_rate,
-          term_years: data.loan_term,
-          start_date: data.purchase_date
-        };
-
-        const { error: loanError } = await this.supabase
-          .from('loans')
-          .insert(loanData);
-
-        if (loanError) {
-          // Log the error but don't fail the property creation
-          console.error('Failed to create loan:', loanError);
-        }
-      }
-
+      const { property } = await response.json();
       return this.mapDatabasePropertyToType(property);
     } catch (error) {
       console.error('Property creation error:', error);
