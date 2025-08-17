@@ -29,6 +29,7 @@ const IconX = ({ className }: { className?: string }) => (
 );
 
 interface LoanFormData {
+  name: string;
   type: LoanType;
   principal_amount: number;
   interest_rate: number;
@@ -45,7 +46,9 @@ interface LoanManagementProps {
 export default function LoanManagement({ loans, onLoansChange, propertyId }: LoanManagementProps) {
   const [isAddingLoan, setIsAddingLoan] = useState(false);
   const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
+  const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
   const [formData, setFormData] = useState<LoanFormData>({
+    name: '',
     type: 'principal_interest',
     principal_amount: 0,
     interest_rate: 0,
@@ -55,6 +58,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   const resetForm = () => {
     setFormData({
+      name: '',
       type: 'principal_interest',
       principal_amount: 0,
       interest_rate: 0,
@@ -72,13 +76,19 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
   const handleEditLoan = (loan: Loan) => {
     setEditingLoanId(loan.id);
     setIsAddingLoan(false);
+    setExpandedLoanId(null);
     setFormData({
+      name: (loan as any).name || `Loan #${loans.findIndex(l => l.id === loan.id) + 1}`,
       type: loan.type,
       principal_amount: loan.principal_amount,
       interest_rate: loan.interest_rate,
       term_years: loan.term_years,
       start_date: loan.start_date
     });
+  };
+
+  const toggleLoanExpansion = (loanId: string) => {
+    setExpandedLoanId(expandedLoanId === loanId ? null : loanId);
   };
 
   const handleDeleteLoan = async (loanId: string) => {
@@ -90,6 +100,8 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   const handleSaveLoan = async () => {
     try {
+      console.log('🔄 Saving loan:', { editingLoanId, formData, currentLoans: loans });
+      
       if (editingLoanId) {
         // Update existing loan
         const updatedLoans = loans.map(loan => 
@@ -101,6 +113,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
               }
             : loan
         );
+        console.log('✏️ Updating loan, new loans array:', updatedLoans);
         onLoansChange(updatedLoans);
       } else {
         // Add new loan
@@ -111,7 +124,10 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
-        onLoansChange([...loans, newLoan]);
+        const updatedLoans = [...loans, newLoan];
+        console.log('➕ Adding new loan:', newLoan);
+        console.log('📋 New loans array:', updatedLoans);
+        onLoansChange(updatedLoans);
       }
 
       // Reset form state
@@ -119,7 +135,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
       setEditingLoanId(null);
       resetForm();
     } catch (error) {
-      console.error('Error saving loan:', error);
+      console.error('❌ Error saving loan:', error);
       alert('Failed to save loan. Please try again.');
     }
   };
@@ -152,7 +168,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   return (
     <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h2 className="text-lg font-semibold">
           Loan Details {loans.length > 0 && (
             <span className="text-sm font-normal text-[#6b7280] ml-2">
@@ -160,13 +176,6 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
             </span>
           )}
         </h2>
-        <button
-          onClick={handleAddLoan}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#2563eb] bg-[#eff6ff] rounded-lg hover:bg-[#dbeafe] border border-[#bfdbfe]"
-        >
-          <IconPlus className="h-4 w-4" />
-          Add Loan
-        </button>
       </div>
 
       {/* Loan List */}
@@ -178,55 +187,109 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
       )}
 
       {loans.map((loan, index) => (
-        <div key={loan.id} className={`border border-[#e5e7eb] rounded-lg p-4 ${index > 0 ? 'mt-3' : ''}`}>
+        <div key={loan.id} className={`border border-[#e5e7eb] rounded-lg ${index > 0 ? 'mt-3' : ''}`}>
           {editingLoanId === loan.id ? (
-            <LoanForm 
-              formData={formData}
-              setFormData={setFormData}
-              onSave={handleSaveLoan}
-              onCancel={handleCancel}
-              isEditing={true}
-            />
+            <div className="p-4">
+              <LoanForm 
+                formData={formData}
+                setFormData={setFormData}
+                onSave={handleSaveLoan}
+                onCancel={handleCancel}
+                isEditing={true}
+              />
+            </div>
           ) : (
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium text-[#111827]">
-                  Loan #{index + 1} - {loan.type === 'interest_only' ? 'Interest Only' : 'Principal & Interest'}
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditLoan(loan)}
-                    className="p-1 text-[#6b7280] hover:text-[#2563eb] hover:bg-[#eff6ff] rounded"
+              {/* Collapsed View - Just loan name */}
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#f9fafb]"
+                onClick={() => toggleLoanExpansion(loan.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-2 h-2 bg-[#2563eb] rounded-full"></div>
+                  </div>
+                  <h3 className="font-medium text-[#111827]">
+                    {(loan as any).name || `Loan #${index + 1}`}
+                  </h3>
+                  <span className="text-sm text-[#6b7280]">
+                    {formatCurrency(loan.principal_amount)} @ {loan.interest_rate}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#6b7280]">
+                    {expandedLoanId === loan.id ? 'Collapse' : 'Expand'}
+                  </span>
+                  <svg 
+                    className={`h-4 w-4 text-[#6b7280] transition-transform ${expandedLoanId === loan.id ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
                   >
-                    <IconEdit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteLoan(loan.id)}
-                    className="p-1 text-[#6b7280] hover:text-[#dc2626] hover:bg-[#fef2f2] rounded"
-                  >
-                    <IconTrash className="h-4 w-4" />
-                  </button>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-[#6b7280]">Principal:</span>
-                  <span className="ml-2 font-medium">{formatCurrency(loan.principal_amount)}</span>
+
+              {/* Expanded View - Full details */}
+              {expandedLoanId === loan.id && (
+                <div className="px-4 pb-4 border-t border-[#f3f4f6]">
+                  <div className="pt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-medium text-[#111827]">Loan Details</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditLoan(loan);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#2563eb] hover:bg-[#eff6ff] rounded"
+                        >
+                          <IconEdit className="h-3 w-3" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteLoan(loan.id);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#dc2626] hover:bg-[#fef2f2] rounded"
+                        >
+                          <IconTrash className="h-3 w-3" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#6b7280]">Type:</span>
+                        <span className="font-medium">{loan.type === 'interest_only' ? 'Interest Only' : 'Principal & Interest'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6b7280]">Principal Amount:</span>
+                        <span className="font-medium">{formatCurrency(loan.principal_amount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6b7280]">Interest Rate:</span>
+                        <span className="font-medium">{loan.interest_rate}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6b7280]">Term:</span>
+                        <span className="font-medium">{loan.term_years} years</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6b7280]">Start Date:</span>
+                        <span className="font-medium">{new Date(loan.start_date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-[#f3f4f6]">
+                        <span className="text-[#6b7280] font-medium">Monthly Payment:</span>
+                        <span className="font-semibold text-[#111827]">{formatCurrency(calculateMonthlyPayment(loan))}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[#6b7280]">Interest Rate:</span>
-                  <span className="ml-2 font-medium">{loan.interest_rate}%</span>
-                </div>
-                <div>
-                  <span className="text-[#6b7280]">Term:</span>
-                  <span className="ml-2 font-medium">{loan.term_years} years</span>
-                </div>
-                <div>
-                  <span className="text-[#6b7280]">Monthly Payment:</span>
-                  <span className="ml-2 font-medium">{formatCurrency(calculateMonthlyPayment(loan))}</span>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -242,6 +305,19 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
             onCancel={handleCancel}
             isEditing={false}
           />
+        </div>
+      )}
+
+      {/* Add New Loan Button at Bottom */}
+      {!isAddingLoan && (
+        <div className={`${loans.length > 0 ? 'mt-4' : ''}`}>
+          <button
+            onClick={handleAddLoan}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-[#2563eb] bg-[#f8fafc] border border-[#e5e7eb] border-dashed rounded-lg hover:bg-[#eff6ff] hover:border-[#2563eb] transition-colors"
+          >
+            <IconPlus className="h-4 w-4" />
+            New Loan
+          </button>
         </div>
       )}
     </section>
@@ -272,6 +348,17 @@ function LoanForm({ formData, setFormData, onSave, onCancel, isEditing }: LoanFo
       </div>
 
       <div className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-1">Loan Name</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            placeholder="e.g., Primary Mortgage, Construction Loan, etc."
+          />
+        </div>
+
         <div>
           <label className="block text-xs font-medium text-[#6b7280] mb-1">Loan Type</label>
           <select

@@ -81,6 +81,7 @@ export type CashflowStatus = 'not_modeled' | 'modeling' | 'modeled' | 'error';
 export interface Loan {
   id: string;
   property_id: string;
+  name?: string;
   type: LoanType;
   principal_amount: number;
   interest_rate: number;

@@ -414,8 +414,8 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   // Handle loan management changes
   const handleLoansChange = useCallback(async (updatedLoans: Loan[]) => {
     try {
-      // Update property with new loans array - loans are stored in the JSONB data column
-
+      console.log('🏠 PropertyModelingPage: Received loan changes:', updatedLoans);
+      
       // Update the property in the database
       const response = await fetch(`/api/properties/${propertyId}`, {
         method: 'PATCH',
@@ -427,11 +427,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
         }),
       });
 
+      console.log('📡 API Response status:', response.status);
+
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ API Error:', errorData);
         throw new Error('Failed to update loans');
       }
 
       const { property: updatedProperty } = await response.json();
+      console.log('✅ Updated property received:', updatedProperty);
       setProperty(updatedProperty);
 
       // Check if property should be marked as fully modeled
@@ -444,7 +449,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
         }
       }
     } catch (error) {
-      console.error('Error updating loans:', error);
+      console.error('❌ Error updating loans:', error);
       alert('Failed to update loans. Please try again.');
     }
   }, [propertyId, property, isPropertyFullyModeled]);
@@ -564,13 +569,6 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               <p className="text-sm text-[#6b7280]">Advanced cashflow modeling and strategy analysis</p>
             </div>
             <div className="flex gap-3">
-              <button 
-                onClick={() => setIsEditingProperty(!isEditingProperty)}
-                className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-medium text-[#111827] hover:shadow-sm"
-              >
-                <IconEdit className="h-4 w-4" />
-                {isEditingProperty ? 'Save' : 'Edit Property'}
-              </button>
               <button className="inline-flex items-center gap-2 rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]">
                 <IconDownload className="h-4 w-4" />
                 Export Report
@@ -584,7 +582,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
           <div className="xl:col-span-1 space-y-6">
             {/* Property Info */}
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Property Details</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Property Details</h2>
+                <button
+                  onClick={() => setIsEditingProperty(!isEditingProperty)}
+                  className="p-1.5 text-[#6b7280] hover:text-[#2563eb] hover:bg-[#eff6ff] rounded-lg transition-colors"
+                  title={isEditingProperty ? 'Save changes' : 'Edit property'}
+                >
+                  <IconEdit className="h-4 w-4" />
+                </button>
+              </div>
               {isEditingProperty ? (
                 <PropertyEditForm property={propertyData} onSave={handlePropertySave} />
               ) : (
