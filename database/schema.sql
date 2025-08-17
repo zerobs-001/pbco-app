@@ -278,148 +278,236 @@ EXCEPTION
 END $$;
 
 -- Users can only see their own data
-CREATE POLICY IF NOT EXISTS "Users can view own profile" ON public.users
-  FOR SELECT USING (auth.uid() = id);
+DO $$ BEGIN
+  CREATE POLICY "Users can view own profile" ON public.users
+    FOR SELECT USING (auth.uid() = id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can update own profile" ON public.users
-  FOR UPDATE USING (auth.uid() = id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own profile" ON public.users
+    FOR UPDATE USING (auth.uid() = id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Profiles policies
-CREATE POLICY "Users can view own profile" ON public.profiles
-  FOR SELECT USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can view own profile" ON public.profiles
+    FOR SELECT USING (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can update own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own profile" ON public.profiles
+    FOR UPDATE USING (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Portfolios policies
-CREATE POLICY "Users can view own portfolios" ON public.portfolios
-  FOR SELECT USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can view own portfolios" ON public.portfolios
+    FOR SELECT USING (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can create own portfolios" ON public.portfolios
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can create own portfolios" ON public.portfolios
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can update own portfolios" ON public.portfolios
-  FOR UPDATE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own portfolios" ON public.portfolios
+    FOR UPDATE USING (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can delete own portfolios" ON public.portfolios
-  FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own portfolios" ON public.portfolios
+    FOR DELETE USING (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Properties policies (inherited from portfolio ownership)
-CREATE POLICY "Users can view own properties" ON public.properties
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.portfolios 
-      WHERE portfolios.id = properties.portfolio_id 
-      AND portfolios.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can view own properties" ON public.properties
+    FOR SELECT USING (
+      EXISTS (
+        SELECT 1 FROM public.portfolios 
+        WHERE portfolios.id = properties.portfolio_id 
+        AND portfolios.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can create properties in own portfolios" ON public.properties
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.portfolios 
-      WHERE portfolios.id = properties.portfolio_id 
-      AND portfolios.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can create properties in own portfolios" ON public.properties
+    FOR INSERT WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.portfolios 
+        WHERE portfolios.id = properties.portfolio_id 
+        AND portfolios.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can update own properties" ON public.properties
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.portfolios 
-      WHERE portfolios.id = properties.portfolio_id 
-      AND portfolios.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can update own properties" ON public.properties
+    FOR UPDATE USING (
+      EXISTS (
+        SELECT 1 FROM public.portfolios 
+        WHERE portfolios.id = properties.portfolio_id 
+        AND portfolios.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can delete own properties" ON public.properties
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM public.portfolios 
-      WHERE portfolios.id = properties.portfolio_id 
-      AND portfolios.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own properties" ON public.properties
+    FOR DELETE USING (
+      EXISTS (
+        SELECT 1 FROM public.portfolios 
+        WHERE portfolios.id = properties.portfolio_id 
+        AND portfolios.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Loans policies (inherited from property ownership)
-CREATE POLICY "Users can view own loans" ON public.loans
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.properties p
-      JOIN public.portfolios pf ON p.portfolio_id = pf.id
-      WHERE p.id = loans.property_id 
-      AND pf.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can view own loans" ON public.loans
+    FOR SELECT USING (
+      EXISTS (
+        SELECT 1 FROM public.properties p
+        JOIN public.portfolios pf ON p.portfolio_id = pf.id
+        WHERE p.id = loans.property_id 
+        AND pf.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can create loans on own properties" ON public.loans
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.properties p
-      JOIN public.portfolios pf ON p.portfolio_id = pf.id
-      WHERE p.id = loans.property_id 
-      AND pf.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can create loans on own properties" ON public.loans
+    FOR INSERT WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.properties p
+        JOIN public.portfolios pf ON p.portfolio_id = pf.id
+        WHERE p.id = loans.property_id 
+        AND pf.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can update own loans" ON public.loans
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.properties p
-      JOIN public.portfolios pf ON p.portfolio_id = pf.id
-      WHERE p.id = loans.property_id 
-      AND pf.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can update own loans" ON public.loans
+    FOR UPDATE USING (
+      EXISTS (
+        SELECT 1 FROM public.properties p
+        JOIN public.portfolios pf ON p.portfolio_id = pf.id
+        WHERE p.id = loans.property_id 
+        AND pf.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can delete own loans" ON public.loans
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM public.properties p
-      JOIN public.portfolios pf ON p.portfolio_id = pf.id
-      WHERE p.id = loans.property_id 
-      AND pf.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own loans" ON public.loans
+    FOR DELETE USING (
+      EXISTS (
+        SELECT 1 FROM public.properties p
+        JOIN public.portfolios pf ON p.portfolio_id = pf.id
+        WHERE p.id = loans.property_id 
+        AND pf.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Results policies
-CREATE POLICY "Users can view own results" ON public.results
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.portfolios 
-      WHERE portfolios.id = results.portfolio_id 
-      AND portfolios.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can view own results" ON public.results
+    FOR SELECT USING (
+      EXISTS (
+        SELECT 1 FROM public.portfolios 
+        WHERE portfolios.id = results.portfolio_id 
+        AND portfolios.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can create results for own portfolios" ON public.results
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.portfolios 
-      WHERE portfolios.id = results.portfolio_id 
-      AND portfolios.user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can create results for own portfolios" ON public.results
+    FOR INSERT WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.portfolios 
+        WHERE portfolios.id = results.portfolio_id 
+        AND portfolios.user_id = auth.uid()
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Consents policies
-CREATE POLICY "Users can view own consents" ON public.consents
-  FOR SELECT USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can view own consents" ON public.consents
+    FOR SELECT USING (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can create own consents" ON public.consents
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can create own consents" ON public.consents
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Audit logs - only admins can view
-CREATE POLICY "Admins can view audit logs" ON public.audit_logs
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE users.id = auth.uid() 
-      AND users.role = 'admin'
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "Admins can view audit logs" ON public.audit_logs
+    FOR SELECT USING (
+      EXISTS (
+        SELECT 1 FROM public.users 
+        WHERE users.id = auth.uid() 
+        AND users.role = 'admin'
+      )
+    );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "System can create audit logs" ON public.audit_logs
-  FOR INSERT WITH CHECK (true);
+DO $$ BEGIN
+  CREATE POLICY "System can create audit logs" ON public.audit_logs
+    FOR INSERT WITH CHECK (true);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Functions for admin override
 CREATE OR REPLACE FUNCTION is_admin()
@@ -443,29 +531,29 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers to automatically update updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
+CREATE TRIGGER IF NOT EXISTS update_users_updated_at BEFORE UPDATE ON public.users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles
+CREATE TRIGGER IF NOT EXISTS update_profiles_updated_at BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_portfolios_updated_at BEFORE UPDATE ON public.portfolios
+CREATE TRIGGER IF NOT EXISTS update_portfolios_updated_at BEFORE UPDATE ON public.portfolios
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_properties_updated_at BEFORE UPDATE ON public.properties
+CREATE TRIGGER IF NOT EXISTS update_properties_updated_at BEFORE UPDATE ON public.properties
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_loans_updated_at BEFORE UPDATE ON public.loans
+CREATE TRIGGER IF NOT EXISTS update_loans_updated_at BEFORE UPDATE ON public.loans
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_reference_lmi_updated_at BEFORE UPDATE ON public.reference_lmi
+CREATE TRIGGER IF NOT EXISTS update_reference_lmi_updated_at BEFORE UPDATE ON public.reference_lmi
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_reference_stamp_duty_updated_at BEFORE UPDATE ON public.reference_stamp_duty
+CREATE TRIGGER IF NOT EXISTS update_reference_stamp_duty_updated_at BEFORE UPDATE ON public.reference_stamp_duty
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_reference_defaults_updated_at BEFORE UPDATE ON public.reference_defaults
+CREATE TRIGGER IF NOT EXISTS update_reference_defaults_updated_at BEFORE UPDATE ON public.reference_defaults
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_reference_cap_rates_updated_at BEFORE UPDATE ON public.reference_cap_rates
+CREATE TRIGGER IF NOT EXISTS update_reference_cap_rates_updated_at BEFORE UPDATE ON public.reference_cap_rates
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
