@@ -362,86 +362,96 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
 }
 
 function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projections: YearlyProjection[]; breakEvenYear: number; height?: number }) {
+  // Ensure we have data to display
+  if (!projections || projections.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-[#6b7280]">Annual Cashflow Projection (First 10 Years)</p>
+        </div>
+        <div className="flex items-center justify-center h-64 text-[#6b7280] border border-[#e5e7eb] rounded-lg">
+          <p>No projection data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get first 10 years of data
+  const chartData = projections.slice(0, 10);
+  const maxCashflow = Math.max(...chartData.map(p => Math.abs(p.netCashflow)));
+  
   return (
     <div className="space-y-4">
-      {/* SUPER OBVIOUS TEST */}
-      <div className="bg-red-500 text-white p-4 text-center font-bold text-xl">
-        🎯 CHART COMPONENT IS RENDERING! 🎯
-      </div>
-      
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#6b7280]">ULTRA SIMPLE TEST CHART</p>
+        <p className="text-sm text-[#6b7280]">Annual Cashflow Projection (First 10 Years)</p>
+        <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+            <span>Positive</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-gray-400 rounded"></div>
+            <span>Negative</span>
+          </div>
+        </div>
       </div>
       
-      {/* Ultra simple chart */}
+      {/* Chart */}
       <div className="bg-white border border-[#e5e7eb] rounded-lg p-6">
         <div className="flex items-end justify-between h-48 gap-2">
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500 border border-black" style={{ height: '80px' }}></div>
-            <div className="text-xs mt-2">2024</div>
-            <div className="text-xs">-$12K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500 border border-black" style={{ height: '70px' }}></div>
-            <div className="text-xs mt-2">2025</div>
-            <div className="text-xs">-$10K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500 border border-black" style={{ height: '60px' }}></div>
-            <div className="text-xs mt-2">2026</div>
-            <div className="text-xs">-$8K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500 border border-black" style={{ height: '50px' }}></div>
-            <div className="text-xs mt-2">2027</div>
-            <div className="text-xs">-$6K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-red-500 border border-black" style={{ height: '30px' }}></div>
-            <div className="text-xs mt-2">2028</div>
-            <div className="text-xs">-$3K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500 border border-black" style={{ height: '20px' }}></div>
-            <div className="text-xs mt-2">2029</div>
-            <div className="text-xs">+$2K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500 border border-black" style={{ height: '60px' }}></div>
-            <div className="text-xs mt-2">2030</div>
-            <div className="text-xs">+$8K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500 border border-black" style={{ height: '100px' }}></div>
-            <div className="text-xs mt-2">2031</div>
-            <div className="text-xs">+$12K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500 border border-black" style={{ height: '140px' }}></div>
-            <div className="text-xs mt-2">2032</div>
-            <div className="text-xs">+$16K</div>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-full bg-green-500 border border-black" style={{ height: '160px' }}></div>
-            <div className="text-xs mt-2">2033</div>
-            <div className="text-xs">+$20K</div>
-          </div>
+          {chartData.map((projection, index) => {
+            const cashflow = projection.netCashflow;
+            const isPositive = cashflow >= 0;
+            const heightPercent = maxCashflow > 0 ? (Math.abs(cashflow) / maxCashflow) * 100 : 0;
+            // Convert percentage to pixels (max 160px height)
+            const barHeight = Math.max((heightPercent / 100) * 160, 10); // Minimum 10px height
+            
+            return (
+              <div key={projection.year} className="flex flex-col items-center flex-1">
+                {/* Bar */}
+                <div 
+                  className={`w-full rounded-t transition-all duration-200 ${
+                    isPositive ? 'bg-blue-500' : 'bg-gray-400'
+                  }`}
+                  style={{ height: `${barHeight}px` }}
+                ></div>
+                
+                {/* Year label */}
+                <div className="text-xs text-[#6b7280] mt-2 text-center">
+                  {projection.year}
+                </div>
+                
+                {/* Value label */}
+                <div className="text-xs font-medium mt-1 text-center">
+                  ${(cashflow / 1000).toFixed(1)}K
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
       
       {/* Summary */}
       <div className="text-center text-sm text-[#6b7280]">
-        ULTRA SIMPLE: Red bars = negative, Green bars = positive
+        Break-even achieved in {breakEvenYear} • 30-year projection shows {projections.filter(p => p.netCashflow > 0).length} positive years
       </div>
       
-      {/* Debug info */}
+      {/* Data summary */}
       <div className="text-xs text-[#6b7280] bg-[#f9fafb] p-3 rounded">
-        <p className="font-medium">Debug Info:</p>
-        <p>• Chart component is rendering</p>
-        <p>• 10 hardcoded bars</p>
-        <p>• Red = negative cashflow</p>
-        <p>• Green = positive cashflow</p>
-        <p>• If you see this, chart rendering works!</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="font-medium">Chart Summary:</p>
+            <p>• {projections.length} total years</p>
+            <p>• Max cashflow: ${(maxCashflow / 1000).toFixed(1)}K</p>
+            <p>• Break-even: {breakEvenYear}</p>
+          </div>
+          <div>
+            <p className="font-medium">Sample Years:</p>
+            <p>• Year 1: ${(projections[0]?.netCashflow / 1000).toFixed(1)}K</p>
+            <p>• Year 5: ${(projections[4]?.netCashflow / 1000).toFixed(1)}K</p>
+            <p>• Year 10: ${(projections[9]?.netCashflow / 1000).toFixed(1)}K</p>
+          </div>
+        </div>
       </div>
     </div>
   );
