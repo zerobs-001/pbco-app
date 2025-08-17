@@ -88,3 +88,106 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const propertyId = resolvedParams.id;
+    const updates = await request.json();
+
+    console.log('🔄 API: Updating property with ID:', propertyId, updates);
+
+    // First, get the current property to merge with updates
+    const { data: currentProperty, error: fetchError } = await supabase
+      .from('properties')
+      .select('data')
+      .eq('id', propertyId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching current property:', fetchError);
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Property not found' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(
+        { error: `Failed to fetch property: ${fetchError.message}` },
+        { status: 500 }
+      );
+    }
+
+    // Merge current data with updates
+    const currentData = currentProperty.data || {};
+    const updatedData = {
+      ...currentData,
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
+    // Update property using service role (bypasses RLS)
+    const { data: property, error } = await supabase
+      .from('properties')
+      .update({ data: updatedData })
+      .eq('id', propertyId)
+      .select(`
+        *,
+        loans (*)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error updating property:', error);
+      return NextResponse.json(
+        { error: `Failed to update property: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Property updated:', property);
+
+    // Map the updated property data to match our service format
+    const propertyData = property.data || {};
+    const mappedProperty = {
+      id: property.id,
+      portfolio_id: property.portfolio_id,
+      name: propertyData.name,
+      type: propertyData.type,
+      address: propertyData.address,
+      purchase_price: propertyData.purchase_price,
+      current_value: propertyData.current_value,
+      purchase_date: propertyData.purchase_date,
+      strategy: propertyData.strategy,
+      cashflow_status: propertyData.cashflow_status || 'not_modeled',
+      created_at: property.created_at,
+      updated_at: property.updated_at,
+      // Financial data from JSONB
+      annual_rent: propertyData.annual_rent,
+      annual_expenses: propertyData.annual_expenses,
+      description: propertyData.description,
+      loan: property.loans?.[0] ? {
+        id: property.loans[0].id,
+        property_id: property.loans[0].property_id,
+        type: property.loans[0].type,
+        principal_amount: property.loans[0].principal_amount,
+        interest_rate: property.loans[0].interest_rate,
+        term_years: property.loans[0].term_years,
+        start_date: property.loans[0].start_date,
+        created_at: property.loans[0].created_at,
+        updated_at: property.loans[0].updated_at
+      } : undefined
+    };
+
+    return NextResponse.json({ property: mappedProperty });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

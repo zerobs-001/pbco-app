@@ -310,6 +310,41 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     setAssumptions(PRESET_PROFILES[preset]);
   }, []);
 
+  const handlePropertySave = useCallback(async (updatedPropertyData: PropertyData) => {
+    try {
+      // Call API to update property
+      const response = await fetch(`/api/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: updatedPropertyData.name,
+          type: updatedPropertyData.type,
+          address: updatedPropertyData.address,
+          purchase_price: updatedPropertyData.purchasePrice,
+          current_value: updatedPropertyData.currentValue,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update property');
+      }
+
+      const { property: updatedProperty } = await response.json();
+      
+      // Update local state
+      setProperty(updatedProperty);
+      setIsEditingProperty(false);
+      
+      console.log('Property updated successfully');
+    } catch (error) {
+      console.error('Error updating property:', error);
+      alert('Failed to update property. Please try again.');
+    }
+  }, [propertyId]);
+
   // Show loading state
   if (loading) {
     return (
@@ -409,10 +444,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold mb-4">Property Details</h2>
               {isEditingProperty ? (
-                <PropertyEditForm property={propertyData} onSave={(data) => {
-                  // TODO: Implement property update functionality
-                  console.log('Property update:', data);
-                }} />
+                <PropertyEditForm property={propertyData} onSave={handlePropertySave} />
               ) : (
                 <PropertyInfoDisplay property={propertyData} />
               )}
