@@ -92,6 +92,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
         if (propertyData) {
           setProperty(propertyData);
           setSelectedStrategy(propertyData.strategy);
+          
+          // Auto-update status to 'modeling' when user visits the modeling page
+          if (propertyData.cashflow_status === 'not_modeled') {
+            try {
+              await propertyService.updateCashflowStatus(propertyId, 'modeling');
+              setProperty(prev => prev ? { ...prev, cashflow_status: 'modeling' } : null);
+            } catch (err) {
+              console.warn('Failed to update cashflow status to modeling:', err);
+            }
+          }
         } else {
           setError('Property not found');
         }
@@ -313,6 +323,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     setAssumptions(PRESET_PROFILES[preset]);
   }, []);
 
+  // Helper function to check if property is fully modeled
+  const isPropertyFullyModeled = useCallback((prop: any, loan?: any) => {
+    return prop && 
+           prop.annual_rent > 0 && 
+           prop.annual_expenses >= 0 && 
+           loan && 
+           loan.principal_amount > 0 && 
+           loan.interest_rate > 0;
+  }, []);
+
   const handlePropertySave = useCallback(async (updatedPropertyData: PropertyData) => {
     try {
       // Call API to update property
@@ -343,12 +363,22 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       setProperty(updatedProperty);
       setIsEditingProperty(false);
       
+      // Check if property should be marked as fully modeled
+      if (isPropertyFullyModeled(updatedProperty, updatedProperty.loan)) {
+        try {
+          await propertyService.updateCashflowStatus(propertyId, 'modeled');
+          setProperty(prev => prev ? { ...prev, cashflow_status: 'modeled' } : null);
+        } catch (err) {
+          console.warn('Failed to update cashflow status to modeled:', err);
+        }
+      }
+      
       console.log('Property updated successfully');
     } catch (error) {
       console.error('Error updating property:', error);
       alert('Failed to update property. Please try again.');
     }
-  }, [propertyId]);
+  }, [propertyId, isPropertyFullyModeled]);
 
   const handleLoanSave = useCallback(async (loanData: any) => {
     try {
@@ -371,12 +401,22 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       setProperty(updatedProperty);
       setIsEditingLoan(false);
       
+      // Check if property should be marked as fully modeled
+      if (isPropertyFullyModeled(updatedProperty, updatedProperty.loan)) {
+        try {
+          await propertyService.updateCashflowStatus(propertyId, 'modeled');
+          setProperty(prev => prev ? { ...prev, cashflow_status: 'modeled' } : null);
+        } catch (err) {
+          console.warn('Failed to update cashflow status to modeled:', err);
+        }
+      }
+      
       console.log('Loan updated successfully');
     } catch (error) {
       console.error('Error updating loan:', error);
       alert('Failed to update loan. Please try again.');
     }
-  }, [propertyId]);
+  }, [propertyId, isPropertyFullyModeled]);
 
   // Show loading state
   if (loading) {

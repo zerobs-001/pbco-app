@@ -259,14 +259,7 @@ export class PropertyService {
    */
   private mapDatabasePropertyToType(dbProperty: any): Property {
     const propertyData = dbProperty.data || {};
-    console.log('🔍 Service: Mapping property data:', {
-      id: dbProperty.id,
-      hasData: !!dbProperty.data,
-      hasLoan: !!dbProperty.loan,
-      hasLoans: !!dbProperty.loans,
-      annual_rent: dbProperty.annual_rent,
-      propertyDataAnnualRent: propertyData.annual_rent
-    });
+
     return {
       id: dbProperty.id,
       portfolio_id: dbProperty.portfolio_id,

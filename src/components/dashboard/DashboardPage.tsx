@@ -4,13 +4,20 @@ import React, { useMemo, useState, useEffect } from "react";
 import { propertyService } from "@/lib/services/propertyService";
 import { Property } from "@/types";
 
-// Helper function for consistent date formatting
+// Helper function for consistent date formatting (client-side only)
 function formatDate(dateString: string): string {
+  if (typeof window === 'undefined') return ''; // SSR fallback
   const date = new Date(dateString);
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
+}
+
+// Helper function to safely format numbers (client-side only)
+function formatNumber(num: number, decimals: number = 1): string {
+  if (typeof window === 'undefined') return '0'; // SSR fallback
+  return num.toFixed(decimals);
 }
 
 // Helper function to calculate DSCR
@@ -23,7 +30,7 @@ function calculateDSCR(annualRent: number, annualExpenses: number, loan: any): s
     const annualLoanPayment = monthlyPayment * 12;
     const netOperatingIncome = annualRent - annualExpenses;
     const dscr = annualLoanPayment > 0 ? netOperatingIncome / annualLoanPayment : 0;
-    return `${dscr.toFixed(1)}x`;
+    return `${formatNumber(dscr, 1)}x`;
   }
   return 'N/A';
 }
@@ -32,12 +39,20 @@ export default function DashboardPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Hardcoded portfolio ID for now (same as used in property creation)
   const portfolioId = "e20784fd-d716-431a-a857-bfba1c661b6c";
 
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Fetch properties on component mount
   useEffect(() => {
+    if (!mounted) return;
+    
     const fetchProperties = async () => {
       try {
         setLoading(true);
@@ -52,7 +67,7 @@ export default function DashboardPage() {
     };
 
     fetchProperties();
-  }, [portfolioId]);
+  }, [portfolioId, mounted]);
 
   // Calculate portfolio KPIs
   const portfolioKPIs = useMemo(() => {
@@ -98,6 +113,15 @@ export default function DashboardPage() {
       totalProperties: properties.length
     };
   }, [properties]);
+
+  // Don't render until client-side mount to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563eb]"></div>
+      </div>
+    );
+  }
 
   // Show loading state
   if (loading) {
@@ -149,19 +173,19 @@ export default function DashboardPage() {
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KpiCard 
               title="Total Portfolio Value" 
-              value={`$${(portfolioKPIs.totalValue / 1000000).toFixed(1)}M`} 
+              value={`$${formatNumber(portfolioKPIs.totalValue / 1000000, 1)}M`} 
               accent="blue" 
               helper={`Across ${portfolioKPIs.totalProperties} properties`} 
             />
             <KpiCard 
               title="Average LVR" 
-              value={`${portfolioKPIs.averageLVR.toFixed(1)}%`} 
+              value={`${formatNumber(portfolioKPIs.averageLVR, 1)}%`} 
               accent="orange" 
               helper="Target ≤ 70%" 
             />
             <KpiCard 
               title="Average DSCR" 
-              value={`${portfolioKPIs.averageDSCR.toFixed(1)}x`} 
+              value={`${formatNumber(portfolioKPIs.averageDSCR, 1)}x`} 
               accent="green" 
               helper="> 1.25x is healthy" 
             />
@@ -294,10 +318,10 @@ function KpiCard({ title, value, accent, helper }: { title: string; value: strin
                     </div>
                   </td>
                   <td className="px-5 py-4 text-sm text-[#111827]">{property.type}</td>
-                                      <td className="px-5 py-4 text-sm text-[#111827]">${(property.current_value / 1000).toFixed(0)}K</td>
+                                      <td className="px-5 py-4 text-sm text-[#111827]">${formatNumber(property.current_value / 1000, 0)}K</td>
                     <td className="px-5 py-4 text-sm text-[#111827]">
                       {property.loan && property.current_value > 0 
-                        ? `${((property.loan.principal_amount / property.current_value) * 100).toFixed(1)}%` 
+                        ? `${formatNumber((property.loan.principal_amount / property.current_value) * 100, 1)}%` 
                         : 'N/A'}
                     </td>
                     <td className="px-5 py-4 text-sm text-[#111827]">
