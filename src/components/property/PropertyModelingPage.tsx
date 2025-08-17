@@ -546,51 +546,46 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          Key Milestones
+          Financial Milestones
         </h3>
         
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-0 right-0 top-8 h-0.5 bg-gray-200"></div>
+        {/* Calculate milestone years */}
+        {(() => {
+          const initialRent = projections[0]?.rentIncome || 45000;
+          const breakEvenYear = projections.find(p => p.cumulativeCashflow >= 0)?.year || 2054;
+          const year25Percent = projections.find(p => p.netCashflow >= initialRent * 0.25)?.year || 2054;
+          const year50Percent = projections.find(p => p.netCashflow >= initialRent * 0.5)?.year || 2054;
+          const year75Percent = projections.find(p => p.netCashflow >= initialRent * 0.75)?.year || 2054;
+          const year100Percent = projections.find(p => p.netCashflow >= initialRent)?.year || 2054;
           
-          <div className="flex justify-between items-start relative">
-            {/* Year 1 */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md mb-2"></div>
-              <div className="text-center">
-                <div className="text-sm font-bold text-gray-900">${(projections[0]?.netCashflow / 1000).toFixed(1)}K</div>
-                <div className="text-xs text-gray-500">Year 1</div>
+          const milestones = [
+            { year: breakEvenYear, label: 'Break-even', color: 'bg-blue-500', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0 },
+            { year: year25Percent, label: '25% of Rent', color: 'bg-green-500', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0 },
+            { year: year50Percent, label: '50% of Rent', color: 'bg-purple-500', cashflow: projections.find(p => p.year === year50Percent)?.netCashflow || 0 },
+            { year: year75Percent, label: '75% of Rent', color: 'bg-orange-500', cashflow: projections.find(p => p.year === year75Percent)?.netCashflow || 0 },
+            { year: year100Percent, label: '100% of Rent', color: 'bg-red-500', cashflow: projections.find(p => p.year === year100Percent)?.netCashflow || 0 }
+          ];
+          
+          return (
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-0 right-0 top-8 h-0.5 bg-gray-200"></div>
+              
+              <div className="flex justify-between items-start relative">
+                {milestones.map((milestone, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div className={`w-4 h-4 ${milestone.color} rounded-full border-2 border-white shadow-md mb-2`}></div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">${(milestone.cashflow / 1000).toFixed(1)}K</div>
+                      <div className="text-xs text-gray-500">{milestone.label}</div>
+                      <div className="text-xs text-gray-400">Year {milestone.year}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            
-            {/* Year 10 */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-md mb-2"></div>
-              <div className="text-center">
-                <div className="text-sm font-bold text-gray-900">${(projections[9]?.netCashflow / 1000).toFixed(1)}K</div>
-                <div className="text-xs text-gray-500">Year 10</div>
-              </div>
-            </div>
-            
-            {/* Year 20 */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-purple-500 rounded-full border-2 border-white shadow-md mb-2"></div>
-              <div className="text-center">
-                <div className="text-sm font-bold text-gray-900">${(projections[19]?.netCashflow / 1000).toFixed(1)}K</div>
-                <div className="text-xs text-gray-500">Year 20</div>
-              </div>
-            </div>
-            
-            {/* Year 30 */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-md mb-2"></div>
-              <div className="text-center">
-                <div className="text-sm font-bold text-gray-900">${(projections[29]?.netCashflow / 1000).toFixed(1)}K</div>
-                <div className="text-xs text-gray-500">Year 30</div>
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
     </div>
   );
