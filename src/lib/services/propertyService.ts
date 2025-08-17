@@ -139,7 +139,7 @@ export class PropertyService {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
-    // Prepare property data
+    // Prepare property data - using the correct column names from our schema
     const propertyData = {
       portfolio_id: portfolioId,
       name: data.name.trim(),
@@ -158,39 +158,64 @@ export class PropertyService {
       }
     };
 
-    // Insert property
-    const { data: property, error: propertyError } = await this.supabase
-      .from('properties')
-      .insert(propertyData)
-      .select()
-      .single();
+    try {
+      // Insert property
+      const { data: property, error: propertyError } = await this.supabase
+        .from('properties')
+        .insert(propertyData)
+        .select()
+        .single();
 
-    if (propertyError) {
-      throw new Error(`Failed to create property: ${propertyError.message}`);
-    }
+      if (propertyError) {
+        // If it's a schema cache issue, try to refresh and retry
+        if (propertyError.message.includes('schema cache')) {
+          console.log('Schema cache issue detected, retrying...');
+          // Force a schema refresh by making a simple query
+          await this.supabase.from('properties').select('id').limit(1);
+          
+          // Retry the insert
+          const { data: retryProperty, error: retryError } = await this.supabase
+            .from('properties')
+            .insert(propertyData)
+            .select()
+            .single();
 
-    // Create loan if loan details are provided
-    if (data.loan_amount && data.interest_rate && data.loan_term && data.loan_type) {
-      const loanData = {
-        property_id: property.id,
-        type: data.loan_type,
-        principal_amount: data.loan_amount,
-        interest_rate: data.interest_rate,
-        term_years: data.loan_term,
-        start_date: data.purchase_date
-      };
-
-      const { error: loanError } = await this.supabase
-        .from('loans')
-        .insert(loanData);
-
-      if (loanError) {
-        // Log the error but don't fail the property creation
-        console.error('Failed to create loan:', loanError);
+          if (retryError) {
+            throw new Error(`Failed to create property after retry: ${retryError.message}`);
+          }
+          
+          return this.mapDatabasePropertyToType(retryProperty);
+        }
+        
+        throw new Error(`Failed to create property: ${propertyError.message}`);
       }
-    }
 
-    return this.mapDatabasePropertyToType(property);
+      // Create loan if loan details are provided
+      if (data.loan_amount && data.interest_rate && data.loan_term && data.loan_type) {
+        const loanData = {
+          property_id: property.id,
+          type: data.loan_type,
+          principal_amount: data.loan_amount,
+          interest_rate: data.interest_rate,
+          term_years: data.loan_term,
+          start_date: data.purchase_date
+        };
+
+        const { error: loanError } = await this.supabase
+          .from('loans')
+          .insert(loanData);
+
+        if (loanError) {
+          // Log the error but don't fail the property creation
+          console.error('Failed to create loan:', loanError);
+        }
+      }
+
+      return this.mapDatabasePropertyToType(property);
+    } catch (error) {
+      console.error('Property creation error:', error);
+      throw error;
+    }
   }
 
   /**

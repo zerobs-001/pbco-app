@@ -119,8 +119,8 @@ export default function NewPropertyPage() {
         description: formData.description
       };
 
-      // For now, use a hardcoded portfolio ID (we'll get this from user context later)
-      const portfolioId = "default-portfolio";
+      // For now, create a temporary portfolio ID (we'll implement proper user management later)
+      const portfolioId = "temp-portfolio-" + Date.now();
       
       // Create the property
       const property = await propertyService.createProperty(portfolioId, createData);
