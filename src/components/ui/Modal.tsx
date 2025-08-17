@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { IconX } from "@tabler/icons-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -56,7 +55,9 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
             onClick={onClose}
             className="p-1 text-[#6b7280] hover:text-[#111827] hover:bg-[#f3f4f6] rounded-lg transition-colors"
           >
-            <IconX className="h-5 w-5" />
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         
