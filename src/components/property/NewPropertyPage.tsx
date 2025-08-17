@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { propertyService, CreatePropertyData, PropertyValidationResult } from "@/lib/services/propertyService";
 
 interface PropertyFormData {
   name: string;
@@ -46,6 +47,7 @@ const LOAN_TYPES = [
 export default function NewPropertyPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationResult, setValidationResult] = useState<PropertyValidationResult | null>(null);
   const [formData, setFormData] = useState<PropertyFormData>({
     name: "",
     type: "residential_house",
@@ -65,24 +67,90 @@ export default function NewPropertyPage() {
 
   const handleInputChange = (field: keyof PropertyFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation result when user starts typing
+    if (validationResult) {
+      setValidationResult(null);
+    }
+  };
+
+  const validateForm = () => {
+    const createData: CreatePropertyData = {
+      name: formData.name,
+      type: formData.type as any,
+      address: formData.address,
+      purchase_price: formData.purchasePrice,
+      current_value: formData.currentValue,
+      purchase_date: formData.purchaseDate,
+      strategy: formData.strategy as any,
+      annual_rent: formData.annualRent,
+      annual_expenses: formData.annualExpenses,
+      loan_amount: formData.loanAmount > 0 ? formData.loanAmount : undefined,
+      interest_rate: formData.loanAmount > 0 ? formData.interestRate : undefined,
+      loan_term: formData.loanAmount > 0 ? formData.loanTerm : undefined,
+      loan_type: formData.loanAmount > 0 ? formData.loanType as any : undefined,
+      description: formData.description
+    };
+    
+    return propertyService.validatePropertyData(createData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setValidationResult(null);
 
     try {
-      // TODO: Replace with actual API call to Supabase
-      console.log("Creating property:", formData);
+      // Convert form data to service format
+      const createData: CreatePropertyData = {
+        name: formData.name,
+        type: formData.type as any,
+        address: formData.address,
+        purchase_price: formData.purchasePrice,
+        current_value: formData.currentValue,
+        purchase_date: formData.purchaseDate,
+        strategy: formData.strategy as any,
+        annual_rent: formData.annualRent,
+        annual_expenses: formData.annualExpenses,
+        loan_amount: formData.loanAmount > 0 ? formData.loanAmount : undefined,
+        interest_rate: formData.loanAmount > 0 ? formData.interestRate : undefined,
+        loan_term: formData.loanAmount > 0 ? formData.loanTerm : undefined,
+        loan_type: formData.loanAmount > 0 ? formData.loanType as any : undefined,
+        description: formData.description
+      };
+
+      // For now, use a hardcoded portfolio ID (we'll get this from user context later)
+      const portfolioId = "default-portfolio";
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create the property
+      const property = await propertyService.createProperty(portfolioId, createData);
       
-      // Generate a mock ID and redirect to modeling page
-      const propertyId = `property-${Date.now()}`;
-      router.push(`/property/${propertyId}/model`);
+      // Redirect to modeling page
+      router.push(`/property/${property.id}/model`);
     } catch (error) {
       console.error("Error creating property:", error);
+      
+      // Show validation errors if available
+      if (error instanceof Error && error.message.includes('Validation failed')) {
+        const validation = propertyService.validatePropertyData({
+          name: formData.name,
+          type: formData.type as any,
+          address: formData.address,
+          purchase_price: formData.purchasePrice,
+          current_value: formData.currentValue,
+          purchase_date: formData.purchaseDate,
+          strategy: formData.strategy as any,
+          annual_rent: formData.annualRent,
+          annual_expenses: formData.annualExpenses,
+          loan_amount: formData.loanAmount > 0 ? formData.loanAmount : undefined,
+          interest_rate: formData.loanAmount > 0 ? formData.interestRate : undefined,
+          loan_term: formData.loanAmount > 0 ? formData.loanTerm : undefined,
+          loan_type: formData.loanAmount > 0 ? formData.loanType as any : undefined,
+          description: formData.description
+        });
+        setValidationResult(validation);
+      }
+      
       setIsSubmitting(false);
     }
   };
@@ -160,6 +228,32 @@ export default function NewPropertyPage() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           {/* Main Form */}
           <div className="xl:col-span-2">
+            {/* Validation Messages */}
+            {validationResult && (
+              <div className="mb-6">
+                {validationResult.errors.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <h3 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h3>
+                    <ul className="text-sm text-red-700 space-y-1">
+                      {validationResult.errors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {validationResult.warnings.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-yellow-800 mb-2">Warnings:</h3>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      {validationResult.warnings.map((warning, index) => (
+                        <li key={index}>• {warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Property Information */}
               <section className="rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
@@ -413,6 +507,35 @@ export default function NewPropertyPage() {
                     </p>
                   </div>
                 </div>
+                
+                {/* Real-time Validation Status */}
+                {(() => {
+                  const validation = validateForm();
+                  return (
+                    <div className="pt-4 border-t border-[#e5e7eb]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-2 h-2 rounded-full ${validation.isValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <p className="text-xs font-medium text-[#6b7280]">
+                          {validation.isValid ? 'Form is valid' : `${validation.errors.length} error${validation.errors.length !== 1 ? 's' : ''}`}
+                        </p>
+                      </div>
+                      {validation.warnings.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-yellow-600 font-medium mb-1">{validation.warnings.length} warning{validation.warnings.length !== 1 ? 's' : ''}</p>
+                          <ul className="text-xs text-yellow-600 space-y-1">
+                            {validation.warnings.slice(0, 2).map((warning, index) => (
+                              <li key={index}>• {warning}</li>
+                            ))}
+                            {validation.warnings.length > 2 && (
+                              <li>• ...and {validation.warnings.length - 2} more</li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                
                 <div className="pt-4 border-t border-[#e5e7eb]">
                   <p className="text-xs text-[#6b7280] mb-2">Required Fields</p>
                   <ul className="text-xs text-[#6b7280] space-y-1">
