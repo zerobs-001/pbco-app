@@ -1,9 +1,10 @@
 import PropertyModelingPage from '@/components/property/PropertyModelingPage';
 
-export default function PropertyModeling({
+export default async function PropertyModeling({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <PropertyModelingPage propertyId={params.id} />;
+  const resolvedParams = await params;
+  return <PropertyModelingPage propertyId={resolvedParams.id} />;
 }
