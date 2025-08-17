@@ -559,11 +559,11 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
           const year100Percent = projections.find(p => p.netCashflow >= initialRent)?.year || 2054;
           
           const milestones = [
-            { year: breakEvenYear, label: 'Break-even', color: 'bg-blue-500', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0 },
-            { year: year25Percent, label: '25% of Rent', color: 'bg-green-500', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0 },
-            { year: year50Percent, label: '50% of Rent', color: 'bg-purple-500', cashflow: projections.find(p => p.year === year50Percent)?.netCashflow || 0 },
-            { year: year75Percent, label: '75% of Rent', color: 'bg-orange-500', cashflow: projections.find(p => p.year === year75Percent)?.netCashflow || 0 },
-            { year: year100Percent, label: '100% of Rent', color: 'bg-red-500', cashflow: projections.find(p => p.year === year100Percent)?.netCashflow || 0 }
+            { year: breakEvenYear, label: 'Break-even', cashflow: projections.find(p => p.year === breakEvenYear)?.netCashflow || 0, achieved: breakEvenYear <= 2054 },
+            { year: year25Percent, label: '25% of Rent', cashflow: projections.find(p => p.year === year25Percent)?.netCashflow || 0, achieved: year25Percent <= 2054 },
+            { year: year50Percent, label: '50% of Rent', cashflow: projections.find(p => p.year === year50Percent)?.netCashflow || 0, achieved: year50Percent <= 2054 },
+            { year: year75Percent, label: '75% of Rent', cashflow: projections.find(p => p.year === year75Percent)?.netCashflow || 0, achieved: year75Percent <= 2054 },
+            { year: year100Percent, label: '100% of Rent', cashflow: projections.find(p => p.year === year100Percent)?.netCashflow || 0, achieved: year100Percent <= 2054 }
           ];
           
           return (
@@ -574,7 +574,9 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
               <div className="flex justify-between items-start relative">
                 {milestones.map((milestone, index) => (
                   <div key={index} className="flex flex-col items-center">
-                    <div className={`w-4 h-4 ${milestone.color} rounded-full border-2 border-white shadow-md mb-2`}></div>
+                    <div className={`w-4 h-4 rounded-full border-2 border-white shadow-md mb-2 ${
+                      milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
+                    }`}></div>
                     <div className="text-center">
                       <div className="text-sm font-bold text-gray-900">${(milestone.cashflow / 1000).toFixed(1)}K</div>
                       <div className="text-xs text-gray-500">{milestone.label}</div>
