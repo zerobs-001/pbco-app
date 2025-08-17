@@ -452,12 +452,8 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       
       const updatedProperty = responseData.property || responseData;
       console.log('✅ Updated property received:', updatedProperty);
-      console.log('🔍 Updated property loans:', updatedProperty?.loans || updatedProperty?.data?.loans);
       
       setProperty(updatedProperty);
-      console.log('🔄 Property state updated');
-      console.log('🔍 Current property state after update:', property);
-      console.log('🔍 Current loans from useMemo:', loans);
 
       // Check if property should be marked as fully modeled
       if (isPropertyFullyModeled(updatedProperty, updatedLoans)) {

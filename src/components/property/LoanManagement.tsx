@@ -100,10 +100,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   const handleSaveLoan = async () => {
     try {
-      console.log('🔄 LoanManagement: Starting loan save process');
-      console.log('📝 Form data:', formData);
-      console.log('📊 Current loans:', loans);
-      console.log('✏️ Editing loan ID:', editingLoanId);
+      console.log('🔄 Saving loan:', formData.name || `Loan #${loans.length + 1}`);
       
       // Validate form data
       if (!formData.name?.trim()) {
@@ -130,7 +127,6 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
               }
             : loan
         );
-        console.log('✏️ Updating existing loan, new loans array:', updatedLoans);
         await onLoansChange(updatedLoans);
       } else {
         // Add new loan
@@ -142,20 +138,15 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
           updated_at: new Date().toISOString()
         };
         const updatedLoans = [...loans, newLoan];
-        console.log('➕ Creating new loan:', newLoan);
-        console.log('📋 Sending updated loans array to parent:', updatedLoans);
         
         // Call the parent callback and wait for it
         await onLoansChange(updatedLoans);
-        console.log('✅ LoanManagement: Parent callback completed');
       }
 
       // Reset form state only after successful save
-      console.log('🔄 Resetting form state');
       setIsAddingLoan(false);
       setEditingLoanId(null);
       resetForm();
-      console.log('✅ LoanManagement: Loan save process completed');
     } catch (error) {
       console.error('❌ LoanManagement: Error in handleSaveLoan:', error);
       alert('Failed to save loan. Please try again.');
