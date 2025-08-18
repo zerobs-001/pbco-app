@@ -634,28 +634,21 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
         Financial Milestones
       </h3>
       
-      {/* Timeline Container */}
-      <div className="relative py-4">
-        {/* Nodes and Labels Container */}
-        <div className="flex justify-between items-center relative">
-          {/* Timeline line - positioned to go through center of nodes */}
-          <div 
-            className="absolute h-0.5 bg-gray-200 top-1/2 transform -translate-y-1/2"
-            style={{
-              left: '8px', // Half of node width (16px / 2)
-              right: '8px' // Half of node width (16px / 2)
-            }}
-          ></div>
-          
+      {/* Timeline Container - Precise Mathematical Positioning */}
+      <div className="relative">
+        {/* Container for nodes - this determines the line length */}
+        <div className="flex justify-between" style={{ paddingTop: '16px' }}>
           {milestones.map((milestone, index) => (
-            <div key={index} className="flex flex-col items-center relative z-10">
-              {/* Node - centered on the line */}
-              <div className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md ${
-                milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
-              }`}></div>
+            <div key={index} className="flex flex-col items-center">
+              {/* Node - 16px wide, positioned first */}
+              <div 
+                className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md relative z-10 ${
+                  milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
+                }`}
+              ></div>
               
-              {/* Labels - positioned below with consistent spacing */}
-              <div className="text-center mt-3">
+              {/* Labels positioned below with adequate spacing */}
+              <div className="text-center mt-6">
                 <div className="text-xs font-medium text-gray-700 whitespace-nowrap">
                   {milestone.label}
                 </div>
@@ -666,6 +659,20 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
             </div>
           ))}
         </div>
+        
+        {/* Timeline line - positioned to go through center of nodes */}
+        <div 
+          className="absolute h-0.5 bg-gray-200"
+          style={{
+            top: '24px', // 16px (paddingTop) + 8px (half of node height) = center of nodes
+            left: '8px', // Half of first node width
+            right: '8px', // Half of last node width
+            zIndex: 1 // Behind the nodes
+          }}
+        ></div>
+        
+        {/* Bottom spacing for labels */}
+        <div style={{ height: '60px' }}></div>
       </div>
     </div>
   );
