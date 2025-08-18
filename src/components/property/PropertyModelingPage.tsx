@@ -257,14 +257,16 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     }, 0);
   }, [projections, assumptions.discountRate]);
 
-  // Calculate milestones
+  // Calculate milestones (client-side only to avoid hydration mismatch)
   const calculatedMilestones = useMemo(() => {
+    if (typeof window === 'undefined') return []; // SSR fallback - no milestones on server
+    
     if (!property?.annual_rent || property.annual_rent === 0) {
       return [];
     }
 
     const rentalIncome = property.annual_rent;
-    const currentYear = new Date().getFullYear(); // 2025
+    const currentYear = new Date().getFullYear(); // 2025 - only calculated on client
     const targets = [
       { percentage: 0, label: "Break-even" },
       { percentage: 25, label: "25% of rental income" },
@@ -616,7 +618,8 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
 }
 
 function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
-  if (!milestones || milestones.length === 0) {
+  // Show loading state during SSR and initial client render
+  if (typeof window === 'undefined' || !milestones || milestones.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
@@ -626,7 +629,9 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
           Financial Milestones
         </h3>
         <div className="text-center py-8 text-gray-500">
-          <p className="text-sm">No milestones available</p>
+          <p className="text-sm">
+            {typeof window === 'undefined' ? 'Loading milestones...' : 'No milestones available'}
+          </p>
         </div>
       </div>
     );
