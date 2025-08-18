@@ -318,6 +318,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
           address: updatedPropertyData.address,
           purchase_price: updatedPropertyData.purchasePrice,
           current_value: updatedPropertyData.currentValue,
+          purchase_date: updatedPropertyData.purchaseDate,
           annual_rent: property?.annual_rent,
           annual_expenses: property?.annual_expenses
         }),
@@ -513,7 +514,11 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
                 </button>
               </div>
               {isEditingProperty ? (
-                <PropertyEditForm property={propertyData} onSave={handlePropertySave} />
+                <PropertyEditForm 
+                  property={propertyData} 
+                  onSave={handlePropertySave} 
+                  onCancel={() => setIsEditingProperty(false)}
+                />
               ) : (
                 <PropertyInfoDisplay property={propertyData} />
               )}
@@ -732,56 +737,7 @@ function PropertyInfoDisplay({ property }: { property: PropertyData }) {
   );
 }
 
-function PropertyEditForm({ property, onSave }: { property: PropertyData; onSave: (data: PropertyData) => void }) {
-  const [formData, setFormData] = useState(property);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-[#111827] mb-1">Property Name</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-[#111827] mb-1">Purchase Price</label>
-          <input
-            type="number"
-            value={formData.purchasePrice}
-            onChange={(e) => setFormData(prev => ({ ...prev, purchasePrice: parseFloat(e.target.value) || 0 }))}
-            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-[#111827] mb-1">Current Value</label>
-          <input
-            type="number"
-            value={formData.currentValue}
-            onChange={(e) => setFormData(prev => ({ ...prev, currentValue: parseFloat(e.target.value) || 0 }))}
-            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-          />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#2563eb] rounded-lg hover:bg-[#1d4ed8]"
-        >
-          Save Changes
-        </button>
-      </div>
-    </form>
-  );
-}
 
 function MetricCard({ label, value, accent, helper }: { label: string; value: string; accent: string; helper: string }) {
   const accentClasses = {
@@ -797,6 +753,158 @@ function MetricCard({ label, value, accent, helper }: { label: string; value: st
       <div className="text-2xl font-bold text-[#111827] mt-1">{value}</div>
       <div className="text-xs text-[#6b7280] mt-1">{helper}</div>
     </div>
+  );
+}
+
+// Property Edit Form Component
+function PropertyEditForm({ property, onSave, onCancel }: { property: PropertyData; onSave: (data: PropertyData) => void; onCancel: () => void }) {
+  const [formData, setFormData] = useState<PropertyData>({
+    id: property.id,
+    name: property.name || '',
+    type: property.type || 'residential_house',
+    address: property.address || '',
+    purchasePrice: property.purchasePrice || 0,
+    currentValue: property.currentValue || 0,
+    purchaseDate: property.purchaseDate || '',
+    strategy: property.strategy || 'buy_hold'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const handleInputChange = (field: keyof PropertyData, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const propertyTypes = [
+    { value: 'residential_house', label: 'Residential House' },
+    { value: 'residential_unit', label: 'Residential Unit' },
+    { value: 'commercial_office', label: 'Commercial Office' },
+    { value: 'commercial_retail', label: 'Commercial Retail' },
+    { value: 'commercial_industrial', label: 'Commercial Industrial' },
+    { value: 'mixed_use', label: 'Mixed Use' }
+  ];
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Property Name */}
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-[#111827] mb-1">
+          Property Name *
+        </label>
+        <input
+          type="text"
+          id="name"
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] text-sm"
+          required
+        />
+      </div>
+
+      {/* Property Address */}
+      <div>
+        <label htmlFor="address" className="block text-sm font-medium text-[#111827] mb-1">
+          Property Address
+        </label>
+        <input
+          type="text"
+          id="address"
+          value={formData.address}
+          onChange={(e) => handleInputChange('address', e.target.value)}
+          className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] text-sm"
+          placeholder="Enter property address"
+        />
+      </div>
+
+      {/* Property Type */}
+      <div>
+        <label htmlFor="type" className="block text-sm font-medium text-[#111827] mb-1">
+          Property Type *
+        </label>
+        <select
+          id="type"
+          value={formData.type}
+          onChange={(e) => handleInputChange('type', e.target.value)}
+          className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] text-sm"
+          required
+        >
+          {propertyTypes.map(type => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Purchase Price */}
+      <div>
+        <label htmlFor="purchasePrice" className="block text-sm font-medium text-[#111827] mb-1">
+          Purchase Price *
+        </label>
+        <input
+          type="number"
+          id="purchasePrice"
+          value={formData.purchasePrice || ''}
+          onChange={(e) => handleInputChange('purchasePrice', parseFloat(e.target.value) || 0)}
+          className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] text-sm"
+          min="0"
+          step="1000"
+          required
+        />
+      </div>
+
+      {/* Current Value */}
+      <div>
+        <label htmlFor="currentValue" className="block text-sm font-medium text-[#111827] mb-1">
+          Last Valuation *
+        </label>
+        <input
+          type="number"
+          id="currentValue"
+          value={formData.currentValue || ''}
+          onChange={(e) => handleInputChange('currentValue', parseFloat(e.target.value) || 0)}
+          className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] text-sm"
+          min="0"
+          step="1000"
+          required
+        />
+      </div>
+
+      {/* Purchase Date */}
+      <div>
+        <label htmlFor="purchaseDate" className="block text-sm font-medium text-[#111827] mb-1">
+          Purchase Date *
+        </label>
+        <input
+          type="date"
+          id="purchaseDate"
+          value={formData.purchaseDate}
+          onChange={(e) => handleInputChange('purchaseDate', e.target.value)}
+          className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] text-sm"
+          required
+        />
+      </div>
+
+      {/* Form Actions */}
+      <div className="flex gap-2 pt-2">
+        <button
+          type="submit"
+          className="flex-1 bg-[#2563eb] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#1d4ed8] transition-colors"
+        >
+          Save Changes
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 border border-[#d1d5db] text-[#6b7280] rounded-lg text-sm font-medium hover:bg-[#f9fafb] transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
