@@ -63,6 +63,15 @@ interface Milestone {
   target: number;
 }
 
+interface PurchaseItem {
+  id: string;
+  engagement: string;
+  paymentTiming: string;
+  due: string;
+  amount: number;
+  status: 'Paid' | 'Outstanding';
+}
+
 // Constants
 const DEFAULT_ASSUMPTIONS: ModelingAssumptions = {
   rentGrowth: 3.5,
@@ -71,6 +80,138 @@ const DEFAULT_ASSUMPTIONS: ModelingAssumptions = {
   taxRate: 30.0,
   discountRate: 8.0,
 };
+
+const DEFAULT_PURCHASE_ITEMS: PurchaseItem[] = [
+  // Engagement
+  {
+    id: '1',
+    engagement: 'Dadidot - Engagement Fee',
+    paymentTiming: 'Engagement',
+    due: '2025-08-25',
+    amount: 500,
+    status: 'Paid'
+  },
+  
+  // Conditional Exchange of Contract
+  {
+    id: '2',
+    engagement: 'Conditional Holding Deposit',
+    paymentTiming: 'Conditional Exchange of Contract',
+    due: '2025-10-25',
+    amount: 8000,
+    status: 'Outstanding'
+  },
+  {
+    id: '3',
+    engagement: 'Building & Landlord Insurance',
+    paymentTiming: 'Conditional Exchange of Contract',
+    due: '2025-10-25',
+    amount: 1200,
+    status: 'Outstanding'
+  },
+  {
+    id: '4',
+    engagement: 'Building & Pest Inspection',
+    paymentTiming: 'Conditional Exchange of Contract',
+    due: '2025-10-25',
+    amount: 800,
+    status: 'Outstanding'
+  },
+  {
+    id: '5',
+    engagement: 'Plumbing & Electrical Inspections',
+    paymentTiming: 'Conditional Exchange of Contract',
+    due: '2025-10-25',
+    amount: 600,
+    status: 'Outstanding'
+  },
+  {
+    id: '6',
+    engagement: 'Independent Property Valuation (optional)',
+    paymentTiming: 'Conditional Exchange of Contract',
+    due: '2025-10-25',
+    amount: 0,
+    status: 'Outstanding'
+  },
+  
+  // Unconditional Exchange of Contract
+  {
+    id: '7',
+    engagement: 'Unconditional Holding Deposit (if any)',
+    paymentTiming: 'Unconditional Exchange of Contract',
+    due: '2025-10-25',
+    amount: 0,
+    status: 'Outstanding'
+  },
+  
+  // Settlement
+  {
+    id: '8',
+    engagement: 'Deposit Balance Paid at:',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 72000,
+    status: 'Outstanding'
+  },
+  {
+    id: '9',
+    engagement: 'Stamp Duty Estimate: (Check By Clicking here)',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 16330,
+    status: 'Outstanding'
+  },
+  {
+    id: '10',
+    engagement: 'Lenders Mortgage Insurance',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 0,
+    status: 'Outstanding'
+  },
+  {
+    id: '11',
+    engagement: 'Mortgage Fees Paid at:',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 750,
+    status: 'Outstanding'
+  },
+  {
+    id: '12',
+    engagement: 'Conveyancing (Fees + Searches estimated Paid at:',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 1200,
+    status: 'Outstanding'
+  },
+  {
+    id: '13',
+    engagement: 'Rates Adjustment - current period',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 2000,
+    status: 'Outstanding'
+  },
+  {
+    id: '14',
+    engagement: 'Dadidot - Balance (if applicable)',
+    paymentTiming: 'Settlement',
+    due: '2025-11-13',
+    amount: 0,
+    status: 'Outstanding'
+  },
+  
+  // Post Settlement
+  {
+    id: '15',
+    engagement: 'Maintenance Allowance',
+    paymentTiming: 'Post Settlement',
+    due: '2025-12-25',
+    amount: 2000,
+    status: 'Outstanding'
+  }
+];
 
 export default function PropertyModelingPage({ propertyId }: { propertyId: string }) {
   const [assumptions, setAssumptions] = useState<ModelingAssumptions>(DEFAULT_ASSUMPTIONS);
@@ -602,6 +743,11 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               assumptions={assumptions}
               totalCashInvested={propertyData.currentValue - aggregatedLoanData.totalPrincipal}
             />
+
+            {/* The Purchase */}
+            <CollapsibleSection title="The Purchase" defaultExpanded={false}>
+              <PurchaseCosts />
+            </CollapsibleSection>
           </div>
         </div>
       </main>
@@ -752,6 +898,161 @@ function MetricCard({ label, value, accent, helper }: { label: string; value: st
       <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">{label}</div>
       <div className="text-2xl font-bold text-[#111827] mt-1">{value}</div>
       <div className="text-xs text-[#6b7280] mt-1">{helper}</div>
+    </div>
+  );
+}
+
+// Purchase Costs Component
+function PurchaseCosts() {
+  const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>(DEFAULT_PURCHASE_ITEMS);
+
+  // Calculate KPIs
+  const totalRemaining = useMemo(() => {
+    return purchaseItems
+      .filter(item => item.status === 'Outstanding')
+      .reduce((sum, item) => sum + item.amount, 0);
+  }, [purchaseItems]);
+
+  const totalCashRequired = useMemo(() => {
+    return purchaseItems.reduce((sum, item) => sum + item.amount, 0);
+  }, [purchaseItems]);
+
+  const handleItemChange = (id: string, field: keyof PurchaseItem, value: string | number) => {
+    setPurchaseItems(prev => prev.map(item => 
+      item.id === id 
+        ? { ...item, [field]: field === 'amount' ? Number(value) : value }
+        : item
+    ));
+  };
+
+  // Group items by payment timing
+  const groupedItems = useMemo(() => {
+    const groups: Record<string, PurchaseItem[]> = {};
+    purchaseItems.forEach(item => {
+      if (!groups[item.paymentTiming]) {
+        groups[item.paymentTiming] = [];
+      }
+      groups[item.paymentTiming].push(item);
+    });
+    return groups;
+  }, [purchaseItems]);
+
+  return (
+    <div className="space-y-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-4">
+          <div className="text-sm font-medium text-red-700 uppercase tracking-wide">
+            Total Remaining to Settle
+          </div>
+          <div className="text-2xl font-bold text-red-800 mt-1">
+            {formatCurrency(totalRemaining, true)}
+          </div>
+          <div className="text-xs text-red-600 mt-1">
+            Outstanding payments
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
+          <div className="text-sm font-medium text-blue-700 uppercase tracking-wide">
+            Total Cash Required for Deal
+          </div>
+          <div className="text-2xl font-bold text-blue-800 mt-1">
+            {formatCurrency(totalCashRequired, true)}
+          </div>
+          <div className="text-xs text-blue-600 mt-1">
+            All purchase costs
+          </div>
+        </div>
+      </div>
+
+      {/* Purchase Items by Group */}
+      <div className="space-y-6">
+        {Object.entries(groupedItems).map(([paymentTiming, items]) => (
+          <div key={paymentTiming} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            {/* Group Header */}
+            <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">{paymentTiming}</h3>
+            </div>
+            
+            {/* Items Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Engagement
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment Timing
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Due
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {items.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {item.engagement}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {item.paymentTiming}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="date"
+                          value={item.due}
+                          onChange={(e) => handleItemChange(item.id, 'due', e.target.value)}
+                          className="text-sm border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-500 mr-1">$</span>
+                          <input
+                            type="number"
+                            value={item.amount || ''}
+                            onChange={(e) => handleItemChange(item.id, 'amount', parseFloat(e.target.value) || 0)}
+                            className="text-sm border border-gray-300 rounded-md px-3 py-1 w-24 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          value={item.status}
+                          onChange={(e) => handleItemChange(item.id, 'status', e.target.value as 'Paid' | 'Outstanding')}
+                          className={`text-sm border rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            item.status === 'Paid' 
+                              ? 'bg-green-50 border-green-300 text-green-800' 
+                              : 'bg-yellow-50 border-yellow-300 text-yellow-800'
+                          }`}
+                        >
+                          <option value="Outstanding">Outstanding</option>
+                          <option value="Paid">Paid</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
