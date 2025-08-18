@@ -264,6 +264,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     }
 
     const rentalIncome = property.annual_rent;
+    const currentYear = new Date().getFullYear(); // 2025
     const targets = [
       { percentage: 0, label: "Break-even" },
       { percentage: 25, label: "25% of rental income" },
@@ -276,10 +277,14 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       const targetAmount = (rentalIncome * target.percentage) / 100;
       const achievedProjection = projections.find(p => p.netCashflow >= targetAmount);
       
+      // FIXED LOGIC: Milestone is achieved ONLY if target is met by current year or earlier
+      const achievedYear = achievedProjection ? achievedProjection.year : null;
+      const isAchieved = achievedYear !== null && achievedYear <= currentYear;
+      
       return {
-        year: achievedProjection ? achievedProjection.year : projections[projections.length - 1]?.year || 2054,
+        year: achievedYear || projections[projections.length - 1]?.year || 2054,
         label: target.label,
-        achieved: !!achievedProjection,
+        achieved: isAchieved, // TRUE only if achieved by current year (2025)
         target: targetAmount
       };
     });
@@ -636,15 +641,15 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
         Financial Milestones
       </h3>
       
-      {/* Timeline Container - Precise Mathematical Positioning */}
+      {/* Timeline Container - Precise Mathematical Positioning for 48px Nodes */}
       <div className="relative">
         {/* Container for nodes - this determines the line length */}
         <div className="flex justify-between" style={{ paddingTop: '16px' }}>
           {milestones.map((milestone, index) => (
             <div key={index} className="flex flex-col items-center">
-              {/* Node - 16px wide, positioned first */}
+              {/* Node - 48px wide (3x larger than original 16px) */}
               <div 
-                className={`w-4 h-4 rounded-full border-2 border-blue-600 shadow-md relative z-10 ${
+                className={`w-12 h-12 rounded-full border-2 border-blue-600 shadow-md relative z-10 ${
                   milestone.achieved ? 'bg-green-500' : 'bg-gray-400'
                 }`}
               ></div>
@@ -662,13 +667,13 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
           ))}
         </div>
         
-        {/* Timeline line - positioned to go through center of nodes */}
+        {/* Timeline line - positioned to go through center of 48px nodes */}
         <div 
           className="absolute h-0.5 bg-gray-200"
           style={{
-            top: '24px', // 16px (paddingTop) + 8px (half of node height) = center of nodes
-            left: '8px', // Half of first node width
-            right: '8px', // Half of last node width
+            top: '40px', // 16px (paddingTop) + 24px (half of 48px node height) = center of nodes
+            left: '24px', // Half of 48px node width
+            right: '24px', // Half of 48px node width
             zIndex: 1 // Behind the nodes
           }}
         ></div>
