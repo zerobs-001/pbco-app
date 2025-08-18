@@ -25,106 +25,85 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
     });
   };
 
-  const summary = (
-    <div className="text-sm text-[#6b7280]">
-      Rent: {assumptions.rentGrowth}% | Capital: {assumptions.capitalGrowth}% | Inflation: {assumptions.inflationRate}%
-    </div>
-  );
-
   return (
-    <CollapsibleSection 
-      title="Growth & Cashflow Assumptions" 
-      summary={summary}
-      defaultExpanded={false}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Growth Rates */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium text-[#111827] border-b border-[#e5e7eb] pb-2">
-            Growth Rates
-          </h3>
-          
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-2">
-              Rent Growth Rate (% per annum)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={assumptions.rentGrowth || ''}
-              onChange={(e) => updateAssumption('rentGrowth', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="3.0"
-            />
-            <p className="text-xs text-[#6b7280] mt-1">Annual increase in rental income</p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-2">
-              Capital Growth Rate (% per annum)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={assumptions.capitalGrowth || ''}
-              onChange={(e) => updateAssumption('capitalGrowth', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="5.0"
-            />
-            <p className="text-xs text-[#6b7280] mt-1">Annual increase in property value</p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-2">
-              Inflation Rate (% per annum)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={assumptions.inflationRate || ''}
-              onChange={(e) => updateAssumption('inflationRate', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="2.5"
-            />
-            <p className="text-xs text-[#6b7280] mt-1">General inflation rate for expenses</p>
-          </div>
+    <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">Growth & Cashflow Assumptions</h2>
+      </div>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-2">
+            Rent Growth Rate (% per annum)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            value={assumptions.rentGrowth || ''}
+            onChange={(e) => updateAssumption('rentGrowth', e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            placeholder="3.0"
+          />
+          <p className="text-xs text-[#6b7280] mt-1">Annual increase in rental income</p>
         </div>
 
-        {/* Financial Assumptions */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium text-[#111827] border-b border-[#e5e7eb] pb-2">
-            Financial Assumptions
-          </h3>
-          
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-2">
-              Discount Rate (% per annum)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={assumptions.discountRate || ''}
-              onChange={(e) => updateAssumption('discountRate', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="8.0"
-            />
-            <p className="text-xs text-[#6b7280] mt-1">Rate for NPV calculations</p>
-          </div>
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-2">
+            Capital Growth Rate (% per annum)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            value={assumptions.capitalGrowth || ''}
+            onChange={(e) => updateAssumption('capitalGrowth', e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            placeholder="5.0"
+          />
+          <p className="text-xs text-[#6b7280] mt-1">Annual increase in property value</p>
+        </div>
 
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-2">
-              Tax Rate (%)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={assumptions.taxRate || ''}
-              onChange={(e) => updateAssumption('taxRate', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="30.0"
-            />
-            <p className="text-xs text-[#6b7280] mt-1">Marginal tax rate for calculations</p>
-          </div>
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-2">
+            Inflation Rate (% per annum)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            value={assumptions.inflationRate || ''}
+            onChange={(e) => updateAssumption('inflationRate', e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            placeholder="2.5"
+          />
+          <p className="text-xs text-[#6b7280] mt-1">General inflation rate for expenses</p>
+        </div>
+        
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-2">
+            Discount Rate (% per annum)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            value={assumptions.discountRate || ''}
+            onChange={(e) => updateAssumption('discountRate', e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            placeholder="8.0"
+          />
+          <p className="text-xs text-[#6b7280] mt-1">Rate for NPV calculations</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280] mb-2">
+            Tax Rate (%)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            value={assumptions.taxRate || ''}
+            onChange={(e) => updateAssumption('taxRate', e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            placeholder="30.0"
+          />
+          <p className="text-xs text-[#6b7280] mt-1">Marginal tax rate for calculations</p>
         </div>
       </div>
 
@@ -170,6 +149,6 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
           </button>
         </div>
       </div>
-    </CollapsibleSection>
+    </section>
   );
 }

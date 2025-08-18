@@ -204,18 +204,14 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
 
   const totalPrincipal = loans.reduce((sum, loan) => sum + loan.principal_amount, 0);
   
-  const summary = (
-    <div className="text-sm text-[#6b7280]">
-      {loans.length} loan{loans.length !== 1 ? 's' : ''} • Total: {formatCurrency(totalPrincipal)}
-    </div>
-  );
-
   return (
-    <CollapsibleSection 
-      title="Loan Details" 
-      summary={summary}
-      defaultExpanded={true}
-    >
+    <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">Loan Details</h2>
+        <p className="text-sm text-[#6b7280] mt-1">
+          {loans.length} loan{loans.length !== 1 ? 's' : ''} • Total: {formatCurrency(totalPrincipal)}
+        </p>
+      </div>
 
       {/* Loan List */}
       {loans.length === 0 && !isAddingLoan && (
@@ -370,7 +366,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
         cancelText="Cancel"
         variant="danger"
       />
-    </CollapsibleSection>
+    </section>
   );
 }
 

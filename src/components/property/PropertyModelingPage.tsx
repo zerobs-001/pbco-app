@@ -492,9 +492,9 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
           {/* Left Sidebar - Controls */}
           <div className="lg:col-span-1 space-y-6">
             {/* Property Details */}
-            <CollapsibleSection title="Property Details" defaultExpanded={true}>
-              <div className="flex items-center justify-between mb-4">
-                <div></div>
+            <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Property Details</h2>
                 <button
                   onClick={() => setIsEditingProperty(!isEditingProperty)}
                   className="p-1.5 text-[#6b7280] hover:text-[#2563eb] hover:bg-[#eff6ff] rounded-lg transition-colors"
@@ -508,7 +508,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
               ) : (
                 <PropertyInfoDisplay property={propertyData} />
               )}
-            </CollapsibleSection>
+            </section>
 
             {/* Loan Management */}
             <LoanManagement 
@@ -611,7 +611,7 @@ function CashflowBarChart({ projections, breakEvenYear, height = 300 }: { projec
 function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center">
+      <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
         <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
@@ -619,7 +619,7 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
       </h3>
       
       {/* Timeline with Perfect Alignment */}
-      <div className="relative h-40">
+      <div className="relative h-32">
         {/* Timeline line - positioned exactly in center */}
         <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-0.5 bg-gray-200"></div>
         
@@ -635,11 +635,16 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
           ))}
         </div>
         
-        {/* Labels positioned below the line */}
-        <div className="absolute left-0 right-0 top-1/2 transform translate-y-4 flex justify-between">
+        {/* Labels positioned below the line - better centered */}
+        <div className="absolute left-0 right-0 top-1/2 transform translate-y-3 flex justify-between">
           {milestones.map((milestone, index) => (
-            <div key={index} className="text-center">
-              <div className="text-sm font-medium text-gray-700">{milestone.label}</div>
+            <div key={index} className="text-center flex flex-col items-center" style={{
+              transform: 'translateX(-50%)',
+              marginLeft: '50%',
+              position: 'relative',
+              left: `${(index / (milestones.length - 1)) * 100 - 50}%`
+            }}>
+              <div className="text-sm font-medium text-gray-700 whitespace-nowrap">{milestone.label}</div>
               <div className="text-xs text-gray-500">Year {milestone.year}</div>
             </div>
           ))}
@@ -650,13 +655,18 @@ function MilestonesTimeline({ milestones }: { milestones: Milestone[] }) {
 }
 
 function PropertyInfoDisplay({ property }: { property: PropertyData }) {
+  const formatDate = (dateString: string) => {
+    if (typeof window === 'undefined') return '';
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div>
-        <h3 className="font-medium text-[#111827]">{property.name}</h3>
-        <p className="text-sm text-[#111827]">{property.address}</p>
+        <h3 className="font-medium text-[#111827] text-base">{property.name}</h3>
+        <p className="text-sm text-[#6b7280] mt-1">{property.address}</p>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 mt-3">
         <div>
           <label className="block text-xs font-medium text-[#6b7280]">Purchase Price</label>
           <p className="text-sm font-medium text-[#111827]">{formatCurrency(property.purchasePrice)}</p>
@@ -664,6 +674,14 @@ function PropertyInfoDisplay({ property }: { property: PropertyData }) {
         <div>
           <label className="block text-xs font-medium text-[#6b7280]">Current Value</label>
           <p className="text-sm font-medium text-[#111827]">{formatCurrency(property.currentValue)}</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280]">Purchase Date</label>
+          <p className="text-sm font-medium text-[#111827]">{formatDate(property.purchaseDate)}</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[#6b7280]">Property Type</label>
+          <p className="text-sm font-medium text-[#111827]">{property.type}</p>
         </div>
       </div>
     </div>
