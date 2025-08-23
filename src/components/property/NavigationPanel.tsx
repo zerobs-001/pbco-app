@@ -12,7 +12,7 @@ import {
   MinusCircleIcon
 } from '@heroicons/react/24/outline';
 
-export type NavigationSectionId = 'property-details' | 'the-purchase' | 'loan-details' | 'growth-assumptions' | 'income-modeling' | 'outgoings-modeling';
+export type NavigationSectionId = 'the-purchase' | 'loan-details' | 'growth-assumptions' | 'income-modeling' | 'outgoings-modeling';
 
 interface NavigationItem {
   id: NavigationSectionId;
@@ -32,16 +32,10 @@ interface NavigationPanelProps {
 
 const navigationItems: NavigationItem[] = [
   {
-    id: 'property-details',
-    label: 'Property Details',
-    icon: HomeIcon,
-    description: 'Basic property information, address, type, strategy'
-  },
-  {
     id: 'the-purchase',
     label: 'The Purchase', 
     icon: CurrencyDollarIcon,
-    description: 'Purchase price, date, current value'
+    description: 'Property details, purchase costs, and deal inputs'
   },
   {
     id: 'loan-details',

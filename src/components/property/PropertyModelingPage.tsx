@@ -11,7 +11,6 @@ import DetailedProjections from "./DetailedProjections";
 import CollapsibleSection from "../ui/CollapsibleSection";
 import NavigationPanel, { NavigationSectionId } from "./NavigationPanel";
 import RightPanel from "./RightPanel";
-import PropertyDetailsSection from "./drawer-sections/PropertyDetailsSection";
 import PurchaseSection from "./drawer-sections/PurchaseSection";
 
 // Safe number formatting to prevent hydration mismatches
@@ -688,26 +687,23 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
   }, []);
 
   // Property data handlers for drawer sections
-  const handlePropertyDetailsChange = useCallback((updates: Partial<PropertyData>) => {
-    if (property) {
+  const handlePurchaseDataChange = useCallback((updates: any) => {
+    if (property && updates.inputs) {
       const updatedProperty = { 
-        ...property, 
-        name: updates.name || property.name,
-        type: (updates.type as PropertyType) || property.type,
-        address: updates.address || property.address,
-        strategy: (updates.strategy as InvestmentStrategy) || property.strategy,
-        status: (updates.status as PropertyStatus) || property.status
+        ...property,
+        // Update property details from Purchase section
+        name: updates.inputs.propertyName || property.name,
+        type: (updates.inputs.propertyType as PropertyType) || property.type,
+        strategy: (updates.inputs.investmentStrategy as InvestmentStrategy) || property.strategy,
+        status: (updates.inputs.status as PropertyStatus) || property.status,
+        address: updates.inputs.propertyAddress || property.address,
+        purchase_price: updates.inputs.purchasePrice || property.purchase_price,
+        current_value: updates.inputs.valuationAtPurchase || property.current_value,
+        annual_rent: (updates.inputs.rentPerWeek || 0) * 52,
+        purchase_date: updates.inputs.contractDate || property.purchase_date
       };
       setProperty(updatedProperty);
-      // Auto-save could go here
-    }
-  }, [property]);
-
-  const handlePurchaseDataChange = useCallback((updates: any) => {
-    if (property) {
-      const updatedProperty = { ...property, ...updates };
-      setProperty(updatedProperty);
-      // Auto-save could go here  
+      // Auto-save could be implemented here
     }
   }, [property]);
 
@@ -721,26 +717,17 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
     if (!activeDrawerSection || !property) return null;
 
     switch (activeDrawerSection) {
-      case 'property-details':
-        return (
-          <PropertyDetailsSection
-            data={{
-              id: property.id,
-              name: property.name || '',
-              type: property.type || '',
-              address: property.address || '',
-              strategy: property.strategy || '',
-              status: property.status
-            }}
-            onChange={handlePropertyDetailsChange}
-          />
-        );
-      
       case 'the-purchase':
         return (
           <PurchaseSection
             data={{
               inputs: {
+                // Property Details (moved from Property Details section)
+                propertyName: property.name || '',
+                propertyType: property.type || 'residential_unit',
+                investmentStrategy: property.strategy || 'buy_hold',
+                status: property.status || 'modelling',
+                
                 // A.1 Core property & buyer
                 propertyAddress: property.address || '',
                 state: '',
@@ -816,7 +803,7 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
       default:
         return null;
     }
-  }, [activeDrawerSection, property, loans, assumptions, propertyId, handlePropertyDetailsChange, handlePurchaseDataChange, handleLoansChange, handleAssumptionsChange, handleIncomeChange, handleOutgoingsChange]);
+  }, [activeDrawerSection, property, loans, assumptions, propertyId, handlePurchaseDataChange, handleLoansChange, handleAssumptionsChange, handleIncomeChange, handleOutgoingsChange]);
 
   // Show loading state
   if (!mounted || loading) {

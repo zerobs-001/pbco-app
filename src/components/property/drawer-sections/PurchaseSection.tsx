@@ -15,6 +15,12 @@ type PaymentStatus = 'Paid' | 'To Pay';
 type TimingGroup = 'Engagement' | 'Exchange' | 'Unconditional' | 'Settlement' | 'Post-Settlement';
 
 interface PurchaseInputs {
+  // Property Details (moved from Property Details section)
+  propertyName: string;
+  propertyType: string;
+  investmentStrategy: string;
+  status: 'modelling' | 'shortlisted' | 'bought' | 'sold';
+  
   // A.1 Core property & buyer
   propertyAddress: string;
   state: string;
@@ -93,6 +99,12 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 }) => {
   // Initialize inputs with defaults
   const [inputs, setInputs] = useState<PurchaseInputs>(() => ({
+    // Property Details (moved from Property Details section)
+    propertyName: data.inputs?.propertyName || '',
+    propertyType: data.inputs?.propertyType || 'residential_unit',
+    investmentStrategy: data.inputs?.investmentStrategy || 'buy_hold',
+    status: data.inputs?.status || 'modelling',
+    
     // Core property & buyer
     propertyAddress: data.inputs?.propertyAddress || '',
     state: data.inputs?.state || '',
@@ -405,7 +417,8 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
       const newInputs = { ...prev };
       
       // Handle different field types
-      if (field === 'propertyAddress' || field === 'state' || field === 'purchasers' || 
+      if (field === 'propertyName' || field === 'propertyType' || field === 'investmentStrategy' || 
+          field === 'status' || field === 'propertyAddress' || field === 'state' || field === 'purchasers' || 
           field === 'engagementDate' || field === 'contractDate' || field === 'loanProduct') {
         newInputs[field] = value as any;
       } else if (field === 'lvr' || field === 'interestRate' || 
@@ -502,15 +515,73 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
     'Post-Settlement': 'gray',
   };
 
+  // Options for select fields
+  const propertyTypes = [
+    { value: 'residential_house', label: 'Residential House' },
+    { value: 'residential_unit', label: 'Residential Unit' },
+    { value: 'commercial_office', label: 'Commercial Office' },
+    { value: 'commercial_retail', label: 'Commercial Retail' },
+    { value: 'industrial', label: 'Industrial' },
+    { value: 'land', label: 'Land' }
+  ];
+
+  const strategies = [
+    { value: 'buy_hold', label: 'Buy & Hold' },
+    { value: 'manufacture_equity', label: 'Manufacture Equity' },
+    { value: 'value_add_commercial', label: 'Value-Add Commercial' },
+    { value: 'fix_flip', label: 'Fix & Flip' },
+    { value: 'development', label: 'Development' }
+  ];
+
+  const statuses = [
+    { value: 'modelling', label: 'Modelling' },
+    { value: 'shortlisted', label: 'Shortlisted' },
+    { value: 'bought', label: 'Bought' },
+    { value: 'sold', label: 'Sold' }
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Section A: Inputs */}
+      {/* DEAL INPUTS (renamed from A) Inputs) */}
       <div className="space-y-4">
         <div className="bg-gray-50 border-l-2 border-gray-400 p-3">
-          <h3 className="text-sm font-semibold text-gray-800">A) Inputs</h3>
+          <h3 className="text-sm font-semibold text-gray-800">DEAL INPUTS</h3>
         </div>
         
         <div className="space-y-1">
+          {/* Property Details (moved from Property Details section) */}
+          <CompactFormRow label="Property Name" required>
+            <CompactInput
+              value={inputs.propertyName}
+              onChange={(value) => updateInput('propertyName', value)}
+              placeholder="Enter property name"
+            />
+          </CompactFormRow>
+
+          <CompactFormRow label="Property Type" required>
+            <CompactSelect
+              value={inputs.propertyType}
+              onChange={(value) => updateInput('propertyType', value)}
+              options={propertyTypes}
+            />
+          </CompactFormRow>
+
+          <CompactFormRow label="Investment Strategy" required>
+            <CompactSelect
+              value={inputs.investmentStrategy}
+              onChange={(value) => updateInput('investmentStrategy', value)}
+              options={strategies}
+            />
+          </CompactFormRow>
+
+          <CompactFormRow label="Status" required>
+            <CompactSelect
+              value={inputs.status}
+              onChange={(value) => updateInput('status', value)}
+              options={statuses}
+            />
+          </CompactFormRow>
+
           {/* A.1 Core property & buyer */}
           <CompactFormRow label="Property Address" required>
             <CompactInput
@@ -699,10 +770,10 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
         </div>
       </div>
 
-      {/* Section B.0: Purchase Summary */}
+      {/* PURCHASE SUMMARY (renamed from B.0) Purchase Summary) */}
       <div className="space-y-4">
         <div className="bg-blue-50 border-l-2 border-blue-400 p-3">
-          <h3 className="text-sm font-semibold text-blue-800">B.0) Purchase Summary</h3>
+          <h3 className="text-sm font-semibold text-blue-800">PURCHASE SUMMARY</h3>
         </div>
         
         <div className="space-y-1">
@@ -763,10 +834,10 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
         </div>
       </div>
 
-      {/* Section B: Purchase Items by Timing */}
+      {/* PURCHASE COSTS (renamed from B) Purchase Timeline) */}
       <div className="space-y-4">
         <div className="bg-gray-50 border-l-2 border-gray-400 p-3">
-          <h3 className="text-sm font-semibold text-gray-800">B) Purchase Timeline</h3>
+          <h3 className="text-sm font-semibold text-gray-800">PURCHASE COSTS</h3>
         </div>
 
         {/* Table Header */}
