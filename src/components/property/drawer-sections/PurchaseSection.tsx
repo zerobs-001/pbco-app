@@ -1,47 +1,66 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CompactInput from '../../ui/CompactInput';
 import CompactFormRow from '../../ui/CompactFormRow';
 import CompactSelect from '../../ui/CompactSelect';
+import { 
+  PurchaseReferences, 
+  calculateStampDuty, 
+  calculateLMI 
+} from '@/lib/constants/purchaseReferences';
+
+// Types
+type PaymentStatus = 'Paid' | 'To Pay';
+type TimingGroup = 'Engagement' | 'Exchange' | 'Unconditional' | 'Settlement' | 'Post-Settlement';
 
 interface PurchaseInputs {
-  // Property Details
+  // A.1 Core property & buyer
   propertyAddress: string;
   state: string;
+  purchasers: string;
+  
+  // A.2 Price, valuation, rent, units
   purchasePrice: number;
   valuationAtPurchase: number;
   rentPerWeek: number;
   numberOfUnits: number;
   
-  // Contract Details
+  // A.3 Dates & durations
+  engagementDate: string;
   contractDate: string;
   daysToUnconditional: number;
   daysForSettlement: number;
   
-  // Loan Details
-  lvr: number;
-  loanProduct: string;
-  interestRate: number;
+  // A.4 Lending parameters
+  lvr: number; // As decimal (0.8 = 80%)
+  loanProduct: 'I/O' | 'P&I';
+  interestRate: number; // As decimal (0.065 = 6.5%)
   loanTermYears: number;
   loanPreApproval: number;
+  
+  // A.5 Cash position
   fundsAvailable: number;
+  
+  // B.0 Purchase Summary percentages
+  depositPaidAtConditional: number; // As decimal
+  depositPaidAtUnconditional: number; // As decimal
 }
 
-interface PurchaseItem {
+interface PaymentItem {
   id: string;
   name: string;
+  timingGroup: TimingGroup;
+  dueDate: string;
   amount: number;
-  paid: number;
-  category: 'property' | 'transaction' | 'deposit' | 'other';
-  isCustom: boolean;
+  status: PaymentStatus;
+  isCalculated: boolean;
+  isOptional?: boolean;
 }
 
 interface PurchaseData {
-  purchasePrice: number;
-  purchaseDate: string;
-  items: PurchaseItem[];
-  inputs?: PurchaseInputs;
+  inputs: PurchaseInputs;
+  paymentItems: PaymentItem[];
 }
 
 interface PurchaseSectionProps {
@@ -49,180 +68,409 @@ interface PurchaseSectionProps {
   onChange: (data: Partial<PurchaseData>) => void;
 }
 
-const DEFAULT_PURCHASE_ITEMS: PurchaseItem[] = [
-  // Property Purchase
-  {
-    id: 'property_purchase_price',
-    name: 'Property Purchase Price',
-    amount: 0,
-    paid: 0,
-    category: 'property',
-    isCustom: false
-  },
-  {
-    id: 'property_valuation_at_purchase',
-    name: 'Property Valuation At Purchase',
-    amount: 0,
-    paid: 0,
-    category: 'property',
-    isCustom: false
-  },
-  
-  // Transaction Costs
-  {
-    id: 'stamp_duty',
-    name: 'Stamp Duty',
-    amount: 0,
-    paid: 0,
-    category: 'transaction',
-    isCustom: false
-  },
-  {
-    id: 'legal_fees',
-    name: 'Legal Fees',
-    amount: 0,
-    paid: 0,
-    category: 'transaction',
-    isCustom: false
-  },
-  {
-    id: 'building_inspection',
-    name: 'Building & Pest Inspection',
-    amount: 0,
-    paid: 0,
-    category: 'transaction',
-    isCustom: false
-  },
-  {
-    id: 'bank_valuation',
-    name: 'Bank Valuation',
-    amount: 0,
-    paid: 0,
-    category: 'transaction',
-    isCustom: false
-  },
-  {
-    id: 'loan_establishment',
-    name: 'Loan Establishment Fees',
-    amount: 0,
-    paid: 0,
-    category: 'transaction',
-    isCustom: false
-  },
-  
-  // Deposits
-  {
-    id: 'total_deposit_percent',
-    name: 'Total Deposit %',
-    amount: 0,
-    paid: 0,
-    category: 'deposit',
-    isCustom: false
-  },
-  {
-    id: 'deposit_paid_conditional',
-    name: 'Deposit Paid at Conditional %',
-    amount: 0,
-    paid: 0,
-    category: 'deposit',
-    isCustom: false
-  },
-  {
-    id: 'deposit_paid_unconditional',
-    name: 'Deposit Paid at Unconditional %',
-    amount: 0,
-    paid: 0,
-    category: 'deposit',
-    isCustom: false
-  }
-];
-
+// Helper functions
 const formatCurrency = (amount: number): string => {
-  if (amount >= 1000) {
+  if (Math.abs(amount) >= 1000) {
     return `$${(amount / 1000).toFixed(1)}K`;
-  } else {
-    return `$${amount.toFixed(0)}`;
   }
+  return `$${amount.toFixed(0)}`;
+};
+
+const formatPercent = (decimal: number): string => {
+  return `${(decimal * 100).toFixed(2)}%`;
+};
+
+const addDays = (dateStr: string, days: number): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
 };
 
 const PurchaseSection: React.FC<PurchaseSectionProps> = ({
   data,
   onChange
 }) => {
+  // Initialize inputs with defaults
   const [inputs, setInputs] = useState<PurchaseInputs>(() => ({
-    // Property Details
+    // Core property & buyer
     propertyAddress: data.inputs?.propertyAddress || '',
     state: data.inputs?.state || '',
-    purchasePrice: data.inputs?.purchasePrice || data.purchasePrice || 0,
-    valuationAtPurchase: data.inputs?.valuationAtPurchase || data.purchasePrice || 0,
+    purchasers: data.inputs?.purchasers || '',
+    
+    // Price, valuation, rent, units
+    purchasePrice: data.inputs?.purchasePrice || 0,
+    valuationAtPurchase: data.inputs?.valuationAtPurchase || data.inputs?.purchasePrice || 0,
     rentPerWeek: data.inputs?.rentPerWeek || 0,
     numberOfUnits: data.inputs?.numberOfUnits || 1,
     
-    // Contract Details
-    contractDate: data.inputs?.contractDate || data.purchaseDate || '',
+    // Dates & durations
+    engagementDate: data.inputs?.engagementDate || new Date().toISOString().split('T')[0],
+    contractDate: data.inputs?.contractDate || '',
     daysToUnconditional: data.inputs?.daysToUnconditional || 14,
     daysForSettlement: data.inputs?.daysForSettlement || 42,
     
-    // Loan Details
-    lvr: data.inputs?.lvr || 80,
-    loanProduct: data.inputs?.loanProduct || 'principal_interest',
-    interestRate: data.inputs?.interestRate || 5.5,
+    // Lending parameters
+    lvr: data.inputs?.lvr || 0.80,
+    loanProduct: data.inputs?.loanProduct || 'P&I',
+    interestRate: data.inputs?.interestRate || 0.065,
     loanTermYears: data.inputs?.loanTermYears || 30,
     loanPreApproval: data.inputs?.loanPreApproval || 0,
-    fundsAvailable: data.inputs?.fundsAvailable || 0
+    
+    // Cash position
+    fundsAvailable: data.inputs?.fundsAvailable || 0,
+    
+    // Purchase Summary percentages
+    depositPaidAtConditional: data.inputs?.depositPaidAtConditional || 0.05, // 5% default
+    depositPaidAtUnconditional: data.inputs?.depositPaidAtUnconditional || 0.05, // 5% default
   }));
 
-  const [items, setItems] = useState<PurchaseItem[]>(() => {
-    return data.items && data.items.length > 0 ? data.items : DEFAULT_PURCHASE_ITEMS;
-  });
-
-  // Update items when inputs change
-  useEffect(() => {
-    const updatedItems = items.map(item => {
-      switch (item.id) {
-        case 'property_purchase_price':
-          return { ...item, amount: inputs.purchasePrice };
-        case 'property_valuation_at_purchase':
-          return { ...item, amount: inputs.valuationAtPurchase };
-        case 'total_deposit_percent':
-          return { ...item, amount: (inputs.purchasePrice * inputs.totalDepositPercent) / 100 };
-        case 'deposit_paid_conditional':
-          return { ...item, amount: (inputs.purchasePrice * inputs.depositConditionalPercent) / 100 };
-        case 'deposit_paid_unconditional':
-          return { ...item, amount: (inputs.purchasePrice * inputs.depositUnconditionalPercent) / 100 };
-        default:
-          return item;
-      }
-    });
+  // Calculate derived values
+  const calculations = useMemo(() => {
+    // A.2 Calculated fields
+    const percentMV = inputs.valuationAtPurchase > 0 
+      ? (inputs.purchasePrice - inputs.valuationAtPurchase) / inputs.valuationAtPurchase
+      : 0;
     
-    setItems(updatedItems);
-    onChange({ 
-      items: updatedItems, 
-      inputs: inputs,
-      purchasePrice: inputs.purchasePrice
-    });
+    // A.4 Calculated fields
+    const loanAmount = inputs.purchasePrice * inputs.lvr;
+    const bcRemaining = inputs.loanPreApproval - loanAmount;
+    
+    // B.0 Purchase Summary calculations
+    const totalDepositPercent = 1 - inputs.lvr;
+    const plannedLoanAmount = inputs.purchasePrice * inputs.lvr;
+    const financedPortionAtSettlement = inputs.lvr * Math.min(inputs.purchasePrice, inputs.valuationAtPurchase);
+    
+    // Date calculations
+    const settlementDate = addDays(inputs.contractDate, inputs.daysForSettlement);
+    const unconditionalDate = addDays(inputs.contractDate, inputs.daysToUnconditional);
+    const postSettlementDate = addDays(settlementDate, PurchaseReferences.PostSettlementLagDays);
+    
+    // Deposit calculations
+    const conditionalDepositAmount = inputs.purchasePrice * inputs.depositPaidAtConditional;
+    const unconditionalDepositAmount = inputs.purchasePrice * inputs.depositPaidAtUnconditional;
+    const depositBalanceAtSettlement = Math.max(0, 
+      inputs.purchasePrice - financedPortionAtSettlement - conditionalDepositAmount - unconditionalDepositAmount
+    );
+    
+    // Fee calculations
+    const stampDuty = calculateStampDuty(inputs.state, inputs.purchasePrice, true);
+    const lmi = totalDepositPercent >= PurchaseReferences.MinDepositPctNoLMI 
+      ? 0 
+      : calculateLMI(plannedLoanAmount, inputs.lvr);
+    const ratesAdjustment = inputs.valuationAtPurchase * PurchaseReferences.RatesAdjustmentRatePct;
+    
+    return {
+      percentMV,
+      loanAmount,
+      bcRemaining,
+      totalDepositPercent,
+      plannedLoanAmount,
+      financedPortionAtSettlement,
+      settlementDate,
+      unconditionalDate,
+      postSettlementDate,
+      conditionalDepositAmount,
+      unconditionalDepositAmount,
+      depositBalanceAtSettlement,
+      stampDuty,
+      lmi,
+      ratesAdjustment,
+    };
   }, [inputs]);
 
+  // Initialize payment items
+  const [paymentItems, setPaymentItems] = useState<PaymentItem[]>(() => {
+    if (data.paymentItems && data.paymentItems.length > 0) {
+      return data.paymentItems;
+    }
+    
+    // Default payment items structure
+    return [
+      // B.1 Timing: Engagement
+      {
+        id: 'engagement_fee',
+        name: 'Engagement Fee',
+        timingGroup: 'Engagement',
+        dueDate: inputs.engagementDate,
+        amount: PurchaseReferences.EngagementFee,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+      
+      // B.2 Timing: Exchange of Contract
+      {
+        id: 'conditional_deposit',
+        name: 'Conditional Holding Deposit',
+        timingGroup: 'Exchange',
+        dueDate: inputs.contractDate,
+        amount: calculations.conditionalDepositAmount,
+        status: 'To Pay',
+        isCalculated: true,
+      },
+      {
+        id: 'building_insurance',
+        name: 'Building & Landlord Insurance',
+        timingGroup: 'Exchange',
+        dueDate: inputs.contractDate,
+        amount: PurchaseReferences.DefaultInsuranceAtExchange,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+      {
+        id: 'building_pest',
+        name: 'Building & Pest Inspection',
+        timingGroup: 'Exchange',
+        dueDate: inputs.contractDate,
+        amount: PurchaseReferences.DefaultBPIFee,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+      {
+        id: 'plumbing_electrical',
+        name: 'Plumbing & Electrical Inspections',
+        timingGroup: 'Exchange',
+        dueDate: inputs.contractDate,
+        amount: PurchaseReferences.DefaultPEInspectionFee,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+      {
+        id: 'independent_valuation',
+        name: 'Independent Property Valuation (optional)',
+        timingGroup: 'Exchange',
+        dueDate: inputs.contractDate,
+        amount: PurchaseReferences.DefaultValuationFee,
+        status: 'To Pay',
+        isCalculated: false,
+        isOptional: true,
+      },
+      
+      // B.3 Timing: Unconditional Exchange
+      {
+        id: 'unconditional_deposit',
+        name: 'Unconditional Holding Deposit',
+        timingGroup: 'Unconditional',
+        dueDate: calculations.unconditionalDate,
+        amount: calculations.unconditionalDepositAmount,
+        status: 'To Pay',
+        isCalculated: true,
+      },
+      
+      // B.4 Timing: Settlement
+      {
+        id: 'deposit_balance',
+        name: 'Deposit Balance Paid at Settlement',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: calculations.depositBalanceAtSettlement,
+        status: 'To Pay',
+        isCalculated: true,
+      },
+      {
+        id: 'stamp_duty',
+        name: 'Stamp Duty (estimate)',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: calculations.stampDuty,
+        status: 'To Pay',
+        isCalculated: true,
+      },
+      {
+        id: 'lmi',
+        name: 'Lenders Mortgage Insurance (LMI)',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: calculations.lmi,
+        status: 'To Pay',
+        isCalculated: true,
+      },
+      {
+        id: 'mortgage_fees',
+        name: 'Mortgage Fees',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: PurchaseReferences.DefaultMortgageFees,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+      {
+        id: 'conveyancing',
+        name: 'Conveyancing (Fees + Searches)',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: PurchaseReferences.DefaultConveyancingFee,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+      {
+        id: 'rates_adjustment',
+        name: 'Rates Adjustment — current period',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: calculations.ratesAdjustment,
+        status: 'To Pay',
+        isCalculated: true,
+      },
+      {
+        id: 'balance',
+        name: 'Balance (If applicable)',
+        timingGroup: 'Settlement',
+        dueDate: calculations.settlementDate,
+        amount: 0,
+        status: 'To Pay',
+        isCalculated: false,
+        isOptional: true,
+      },
+      
+      // B.5 Timing: Post-Settlement
+      {
+        id: 'maintenance_allowance',
+        name: 'Maintenance Allowance',
+        timingGroup: 'Post-Settlement',
+        dueDate: calculations.postSettlementDate,
+        amount: PurchaseReferences.DefaultMaintenanceAllowance,
+        status: 'To Pay',
+        isCalculated: false,
+      },
+    ];
+  });
+
+  // Update payment items when calculations change
+  useEffect(() => {
+    const updatedItems = paymentItems.map(item => {
+      if (!item.isCalculated) return item;
+      
+      let newAmount = item.amount;
+      let newDueDate = item.dueDate;
+      
+      switch (item.id) {
+        case 'conditional_deposit':
+          newAmount = calculations.conditionalDepositAmount;
+          newDueDate = inputs.contractDate;
+          break;
+        case 'unconditional_deposit':
+          newAmount = calculations.unconditionalDepositAmount;
+          newDueDate = calculations.unconditionalDate;
+          break;
+        case 'deposit_balance':
+          newAmount = calculations.depositBalanceAtSettlement;
+          newDueDate = calculations.settlementDate;
+          break;
+        case 'stamp_duty':
+          newAmount = calculations.stampDuty;
+          newDueDate = calculations.settlementDate;
+          break;
+        case 'lmi':
+          newAmount = calculations.lmi;
+          newDueDate = calculations.settlementDate;
+          break;
+        case 'rates_adjustment':
+          newAmount = calculations.ratesAdjustment;
+          newDueDate = calculations.settlementDate;
+          break;
+      }
+      
+      // Update due dates for non-calculated items based on timing group
+      if (!item.isCalculated) {
+        switch (item.timingGroup) {
+          case 'Engagement':
+            newDueDate = inputs.engagementDate;
+            break;
+          case 'Exchange':
+            newDueDate = inputs.contractDate;
+            break;
+          case 'Unconditional':
+            newDueDate = calculations.unconditionalDate;
+            break;
+          case 'Settlement':
+            newDueDate = calculations.settlementDate;
+            break;
+          case 'Post-Settlement':
+            newDueDate = calculations.postSettlementDate;
+            break;
+        }
+      }
+      
+      return { ...item, amount: newAmount, dueDate: newDueDate };
+    });
+    
+    setPaymentItems(updatedItems);
+    onChange({ inputs, paymentItems: updatedItems });
+  }, [inputs, calculations]);
+
+  // Update functions
   const updateInput = (field: keyof PurchaseInputs, value: string | number) => {
-    const finalValue = typeof value === 'string' 
-      ? (field === 'propertyAddress' || field === 'state' || field === 'contractDate' || field === 'loanProduct' 
-         ? value 
-         : parseFloat(value) || 0)
-      : value;
-    setInputs(prev => ({ ...prev, [field]: finalValue }));
+    setInputs(prev => {
+      const newInputs = { ...prev };
+      
+      // Handle different field types
+      if (field === 'propertyAddress' || field === 'state' || field === 'purchasers' || 
+          field === 'engagementDate' || field === 'contractDate' || field === 'loanProduct') {
+        newInputs[field] = value as any;
+      } else if (field === 'lvr' || field === 'interestRate' || 
+                 field === 'depositPaidAtConditional' || field === 'depositPaidAtUnconditional') {
+        // Convert percentage input to decimal
+        const numValue = typeof value === 'string' ? parseFloat(value) : value;
+        newInputs[field] = isNaN(numValue) ? 0 : numValue / 100;
+      } else {
+        const numValue = typeof value === 'string' ? parseFloat(value) : value;
+        newInputs[field] = isNaN(numValue) ? 0 : numValue;
+      }
+      
+      // Auto-fill contract date if not set
+      if (field === 'engagementDate' && !newInputs.contractDate) {
+        newInputs.contractDate = addDays(value as string, PurchaseReferences.DefaultContractLeadDays);
+      }
+      
+      // Auto-fill valuation if not set
+      if (field === 'purchasePrice' && !prev.valuationAtPurchase) {
+        newInputs.valuationAtPurchase = numValue as number;
+      }
+      
+      // Auto-calculate rent if not set
+      if (field === 'purchasePrice' && !prev.rentPerWeek) {
+        const numValue = typeof value === 'string' ? parseFloat(value) : value;
+        newInputs.rentPerWeek = Math.round((numValue * PurchaseReferences.DefaultGrossYield) / 52);
+      }
+      
+      return newInputs;
+    });
   };
 
-  // Calculated fields
-  const percentMV = inputs.valuationAtPurchase > 0 
-    ? ((inputs.valuationAtPurchase - inputs.purchasePrice) / inputs.valuationAtPurchase) * 100 
-    : 0;
-  
-  const loanAmount = (inputs.purchasePrice * inputs.lvr) / 100;
-  
-  const bcRemaining = inputs.loanPreApproval - loanAmount;
+  const updatePaymentItem = (id: string, field: 'amount' | 'status', value: number | PaymentStatus) => {
+    const updatedItems = paymentItems.map(item => 
+      item.id === id 
+        ? { ...item, [field]: field === 'amount' ? parseFloat(value.toString()) || 0 : value }
+        : item
+    );
+    setPaymentItems(updatedItems);
+    onChange({ inputs, paymentItems: updatedItems });
+  };
 
-  // Australian states
-  const australianStates = [
+  // Calculate summaries
+  const getTimingGroupItems = (group: TimingGroup) => {
+    return paymentItems.filter(item => item.timingGroup === group);
+  };
+
+  const getTimingGroupTotal = (group: TimingGroup) => {
+    return getTimingGroupItems(group).reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  const getTimingGroupToPay = (group: TimingGroup) => {
+    return getTimingGroupItems(group)
+      .filter(item => item.status === 'To Pay')
+      .reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  const totalCashRequired = paymentItems.reduce((sum, item) => sum + item.amount, 0);
+  const totalRemainingToPay = paymentItems
+    .filter(item => item.status === 'To Pay')
+    .reduce((sum, item) => sum + item.amount, 0);
+  const fundsRemaining = inputs.fundsAvailable - totalCashRequired;
+
+  // State options
+  const stateOptions = [
     { value: '', label: 'Select State' },
     { value: 'NSW', label: 'New South Wales' },
     { value: 'VIC', label: 'Victoria' },
@@ -231,12 +479,12 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
     { value: 'SA', label: 'South Australia' },
     { value: 'TAS', label: 'Tasmania' },
     { value: 'ACT', label: 'Australian Capital Territory' },
-    { value: 'NT', label: 'Northern Territory' }
+    { value: 'NT', label: 'Northern Territory' },
   ];
 
   const loanProductOptions = [
-    { value: 'interest_only', label: 'Interest Only' },
-    { value: 'principal_interest', label: 'Principal & Interest' }
+    { value: 'I/O', label: 'Interest Only' },
+    { value: 'P&I', label: 'Principal & Interest' },
   ];
 
   const unitOptions = Array.from({ length: 10 }, (_, i) => ({
@@ -244,203 +492,26 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
     label: (i + 1).toString()
   }));
 
-  const updateItem = (id: string, field: keyof PurchaseItem, value: string | number) => {
-    const updatedItems = items.map(item => 
-      item.id === id 
-        ? { ...item, [field]: field === 'name' ? value : parseFloat(value.toString()) || 0 }
-        : item
-    );
-    setItems(updatedItems);
-    onChange({ items: updatedItems });
-  };
+  const timingGroups: TimingGroup[] = ['Engagement', 'Exchange', 'Unconditional', 'Settlement', 'Post-Settlement'];
 
-  const addCustomItem = (category: string) => {
-    const newItem: PurchaseItem = {
-      id: `custom_${Date.now()}`,
-      name: 'Custom Item',
-      amount: 0,
-      paid: 0,
-      category: category as any,
-      isCustom: true
-    };
-    const updatedItems = [...items, newItem];
-    setItems(updatedItems);
-    onChange({ items: updatedItems });
-  };
-
-  const removeItem = (id: string) => {
-    const updatedItems = items.filter(item => item.id !== id);
-    setItems(updatedItems);
-    onChange({ items: updatedItems });
-  };
-
-  const getItemsByCategory = (category: string) => {
-    return items.filter(item => item.category === category);
-  };
-
-  const getCategoryTotal = (category: string) => {
-    return items
-      .filter(item => item.category === category)
-      .reduce((total, item) => total + item.amount, 0);
-  };
-
-  const getCategoryPaid = (category: string) => {
-    return items
-      .filter(item => item.category === category)
-      .reduce((total, item) => total + item.paid, 0);
-  };
-
-  const getCategoryRemaining = (category: string) => {
-    return getCategoryTotal(category) - getCategoryPaid(category);
-  };
-
-  const grandTotal = items.reduce((total, item) => total + item.amount, 0);
-  const totalPaid = items.reduce((total, item) => total + item.paid, 0);
-  const totalRemaining = grandTotal - totalPaid;
-
-  const categories = [
-    { id: 'property', name: 'Property Purchase', color: 'blue' },
-    { id: 'transaction', name: 'Transaction Costs', color: 'purple' },
-    { id: 'deposit', name: 'Deposits', color: 'green' },
-    { id: 'other', name: 'Other Costs', color: 'gray' }
-  ];
-
-  const renderCategory = (category: any) => {
-    const categoryItems = getItemsByCategory(category.id);
-    const total = getCategoryTotal(category.id);
-    const paid = getCategoryPaid(category.id);
-    const remaining = getCategoryRemaining(category.id);
-
-    if (categoryItems.length === 0 && category.id === 'other') return null;
-
-    return (
-      <div key={category.id} className="space-y-3">
-        {/* Category Header */}
-        <div className={
-          category.color === 'blue' ? 'bg-blue-50 border-l-2 border-blue-400 p-3' :
-          category.color === 'purple' ? 'bg-purple-50 border-l-2 border-purple-400 p-3' :
-          category.color === 'green' ? 'bg-green-50 border-l-2 border-green-400 p-3' :
-          'bg-gray-50 border-l-2 border-gray-400 p-3'
-        }>
-          <div className="flex justify-between items-center">
-            <h3 className={
-              category.color === 'blue' ? 'text-sm font-semibold text-blue-800' :
-              category.color === 'purple' ? 'text-sm font-semibold text-purple-800' :
-              category.color === 'green' ? 'text-sm font-semibold text-green-800' :
-              'text-sm font-semibold text-gray-800'
-            }>
-              {category.name}
-            </h3>
-            <div className="flex gap-4 text-xs">
-              <span className={
-                category.color === 'blue' ? 'text-blue-700' :
-                category.color === 'purple' ? 'text-purple-700' :
-                category.color === 'green' ? 'text-green-700' :
-                'text-gray-700'
-              }>
-                Total: {formatCurrency(total)}
-              </span>
-              <span className="text-green-700">
-                Paid: {formatCurrency(paid)}
-              </span>
-              <span className="text-red-700">
-                Remaining: {formatCurrency(remaining)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Category Items */}
-        <div className="space-y-1">
-          {categoryItems.map((item) => (
-            <div key={item.id} className="grid grid-cols-12 gap-2 items-center py-1 hover:bg-gray-50 rounded">
-              {/* Item Name */}
-              <div className="col-span-5">
-                {item.isCustom ? (
-                  <CompactInput
-                    value={item.name}
-                    onChange={(value) => updateItem(item.id, 'name', value)}
-                    placeholder="Item name"
-                    className="text-xs"
-                  />
-                ) : (
-                  <div className="text-xs font-medium text-gray-900 py-1">
-                    {item.name}
-                  </div>
-                )}
-              </div>
-
-              {/* Amount */}
-              <div className="col-span-2">
-                <CompactInput
-                  type="number"
-                  value={item.amount ? item.amount.toString() : ''}
-                  onChange={(value) => updateItem(item.id, 'amount', value)}
-                  placeholder="0"
-                  className="text-xs"
-                />
-              </div>
-
-              {/* Paid */}
-              <div className="col-span-2">
-                <CompactInput
-                  type="number"
-                  value={item.paid ? item.paid.toString() : ''}
-                  onChange={(value) => updateItem(item.id, 'paid', value)}
-                  placeholder="0"
-                  className="text-xs"
-                />
-              </div>
-
-              {/* Remaining (Display) */}
-              <div className="col-span-2">
-                <div className="text-xs text-gray-600 py-1 text-right">
-                  {formatCurrency(item.amount - item.paid)}
-                </div>
-              </div>
-
-              {/* Remove Button (for custom items) */}
-              <div className="col-span-1 flex justify-end">
-                {item.isCustom && (
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                    title="Remove item"
-                  >
-                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Add Custom Item Button */}
-        <button
-          onClick={() => addCustomItem(category.id)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 border-dashed rounded hover:bg-gray-100 hover:border-gray-300 transition-colors"
-        >
-          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add {category.name} Item
-        </button>
-      </div>
-    );
+  const timingGroupColors = {
+    'Engagement': 'blue',
+    'Exchange': 'purple',
+    'Unconditional': 'green',
+    'Settlement': 'orange',
+    'Post-Settlement': 'gray',
   };
 
   return (
     <div className="space-y-6">
-      {/* Input Section */}
+      {/* Section A: Inputs */}
       <div className="space-y-4">
         <div className="bg-gray-50 border-l-2 border-gray-400 p-3">
-          <h3 className="text-sm font-semibold text-gray-800">Inputs</h3>
+          <h3 className="text-sm font-semibold text-gray-800">A) Inputs</h3>
         </div>
         
         <div className="space-y-1">
-          {/* Property Details */}
+          {/* A.1 Core property & buyer */}
           <CompactFormRow label="Property Address" required>
             <CompactInput
               value={inputs.propertyAddress}
@@ -453,15 +524,23 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
             <CompactSelect
               value={inputs.state}
               onChange={(value) => updateInput('state', value)}
-              options={australianStates}
-              placeholder="Select State"
+              options={stateOptions}
             />
           </CompactFormRow>
 
+          <CompactFormRow label="Purchaser(s)" required>
+            <CompactInput
+              value={inputs.purchasers}
+              onChange={(value) => updateInput('purchasers', value)}
+              placeholder="Enter purchaser names"
+            />
+          </CompactFormRow>
+
+          {/* A.2 Price, valuation, rent, units */}
           <CompactFormRow label="Purchase Price" required>
             <CompactInput
               type="number"
-              value={inputs.purchasePrice ? inputs.purchasePrice.toString() : ''}
+              value={inputs.purchasePrice || ''}
               onChange={(value) => updateInput('purchasePrice', value)}
               placeholder="0"
             />
@@ -470,7 +549,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
           <CompactFormRow label="Valuation at Purchase">
             <CompactInput
               type="number"
-              value={inputs.valuationAtPurchase ? inputs.valuationAtPurchase.toString() : ''}
+              value={inputs.valuationAtPurchase || ''}
               onChange={(value) => updateInput('valuationAtPurchase', value)}
               placeholder="0"
             />
@@ -478,14 +557,15 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
           <CompactFormRow label="%MV">
             <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
-              {percentMV.toFixed(2)}%
+              {formatPercent(calculations.percentMV)}
+              {calculations.percentMV < 0 && <span className="text-green-600 ml-2">(Below market)</span>}
             </div>
           </CompactFormRow>
 
           <CompactFormRow label="Rent Per Week">
             <CompactInput
               type="number"
-              value={inputs.rentPerWeek ? inputs.rentPerWeek.toString() : ''}
+              value={inputs.rentPerWeek || ''}
               onChange={(value) => updateInput('rentPerWeek', value)}
               placeholder="0"
             />
@@ -499,7 +579,15 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
             />
           </CompactFormRow>
 
-          {/* Contract Details */}
+          {/* A.3 Dates & durations */}
+          <CompactFormRow label="Engagement Date">
+            <CompactInput
+              type="date"
+              value={inputs.engagementDate}
+              onChange={(value) => updateInput('engagementDate', value)}
+            />
+          </CompactFormRow>
+
           <CompactFormRow label="Contract Date">
             <CompactInput
               type="date"
@@ -511,7 +599,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
           <CompactFormRow label="Days to Unconditional">
             <CompactInput
               type="number"
-              value={inputs.daysToUnconditional ? inputs.daysToUnconditional.toString() : ''}
+              value={inputs.daysToUnconditional || ''}
               onChange={(value) => updateInput('daysToUnconditional', value)}
               placeholder="14"
             />
@@ -520,18 +608,18 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
           <CompactFormRow label="Days for Settlement">
             <CompactInput
               type="number"
-              value={inputs.daysForSettlement ? inputs.daysForSettlement.toString() : ''}
+              value={inputs.daysForSettlement || ''}
               onChange={(value) => updateInput('daysForSettlement', value)}
               placeholder="42"
             />
           </CompactFormRow>
 
-          {/* Loan Details */}
-          <CompactFormRow label="LVR">
+          {/* A.4 Lending parameters */}
+          <CompactFormRow label="LVR (%)">
             <CompactInput
               type="number"
-              step={0.1}
-              value={inputs.lvr ? inputs.lvr.toString() : ''}
+              step="0.1"
+              value={(inputs.lvr * 100) || ''}
               onChange={(value) => updateInput('lvr', value)}
               placeholder="80"
             />
@@ -545,35 +633,35 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Interest Rate">
+          <CompactFormRow label="Interest Rate (%)">
             <CompactInput
               type="number"
-              step={0.01}
-              value={inputs.interestRate ? inputs.interestRate.toString() : ''}
+              step="0.01"
+              value={(inputs.interestRate * 100) || ''}
               onChange={(value) => updateInput('interestRate', value)}
-              placeholder="5.50"
+              placeholder="6.50"
             />
           </CompactFormRow>
 
           <CompactFormRow label="Loan Term (Years)">
             <CompactInput
               type="number"
-              value={inputs.loanTermYears ? inputs.loanTermYears.toString() : ''}
+              value={inputs.loanTermYears || ''}
               onChange={(value) => updateInput('loanTermYears', value)}
               placeholder="30"
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Loan amount (LVR*PP)">
+          <CompactFormRow label="Loan amount (LVR×PP)">
             <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
-              {formatCurrency(loanAmount)}
+              {formatCurrency(calculations.loanAmount)}
             </div>
           </CompactFormRow>
 
           <CompactFormRow label="Loan pre-approval">
             <CompactInput
               type="number"
-              value={inputs.loanPreApproval ? inputs.loanPreApproval.toString() : ''}
+              value={inputs.loanPreApproval || ''}
               onChange={(value) => updateInput('loanPreApproval', value)}
               placeholder="0"
             />
@@ -581,17 +669,79 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
           <CompactFormRow label="BC Remaining">
             <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
-              {formatCurrency(bcRemaining)}
+              {formatCurrency(calculations.bcRemaining)}
+              {calculations.bcRemaining < 0 && <span className="text-red-600 ml-2">(Over limit)</span>}
             </div>
           </CompactFormRow>
 
+          {/* A.5 Cash position */}
           <CompactFormRow label="Funds Available">
             <CompactInput
               type="number"
-              value={inputs.fundsAvailable ? inputs.fundsAvailable.toString() : ''}
+              value={inputs.fundsAvailable || ''}
               onChange={(value) => updateInput('fundsAvailable', value)}
               placeholder="0"
             />
+          </CompactFormRow>
+
+          <CompactFormRow label="Funds Required">
+            <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
+              {formatCurrency(totalCashRequired)}
+            </div>
+          </CompactFormRow>
+
+          <CompactFormRow label="Funds Remaining">
+            <div className={`text-xs py-1 border-b border-gray-300 ${fundsRemaining < 0 ? 'text-red-600' : 'text-gray-600'}`}>
+              {formatCurrency(fundsRemaining)}
+              {fundsRemaining < 0 && <span className="ml-2">(Shortfall)</span>}
+            </div>
+          </CompactFormRow>
+        </div>
+      </div>
+
+      {/* Section B.0: Purchase Summary */}
+      <div className="space-y-4">
+        <div className="bg-blue-50 border-l-2 border-blue-400 p-3">
+          <h3 className="text-sm font-semibold text-blue-800">B.0) Purchase Summary</h3>
+        </div>
+        
+        <div className="space-y-1">
+          <CompactFormRow label="Total Deposit %">
+            <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
+              {formatPercent(calculations.totalDepositPercent)}
+            </div>
+          </CompactFormRow>
+
+          <CompactFormRow label="Deposit at Conditional (%)">
+            <CompactInput
+              type="number"
+              step="0.1"
+              value={(inputs.depositPaidAtConditional * 100) || ''}
+              onChange={(value) => updateInput('depositPaidAtConditional', value)}
+              placeholder="5"
+            />
+          </CompactFormRow>
+
+          <CompactFormRow label="Deposit at Unconditional (%)">
+            <CompactInput
+              type="number"
+              step="0.1"
+              value={(inputs.depositPaidAtUnconditional * 100) || ''}
+              onChange={(value) => updateInput('depositPaidAtUnconditional', value)}
+              placeholder="5"
+            />
+          </CompactFormRow>
+
+          <CompactFormRow label="Planned Loan Amount">
+            <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
+              {formatCurrency(calculations.plannedLoanAmount)}
+            </div>
+          </CompactFormRow>
+
+          <CompactFormRow label="Financed Portion at Settlement">
+            <div className="text-xs text-gray-600 py-1 border-b border-gray-300">
+              {formatCurrency(calculations.financedPortionAtSettlement)}
+            </div>
           </CompactFormRow>
         </div>
       </div>
@@ -599,33 +749,124 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
       {/* Grand Total Summary */}
       <div className="bg-gray-100 border-2 border-gray-300 p-4 rounded-lg">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-sm font-bold text-gray-900">Purchase Summary</h2>
+          <h2 className="text-sm font-bold text-gray-900">Deal Summary</h2>
           <div className="text-right">
             <div className="text-lg font-bold text-gray-900">
-              {formatCurrency(totalRemaining)}
+              {formatCurrency(totalRemainingToPay)}
             </div>
             <div className="text-xs text-gray-600">Capital Required</div>
           </div>
         </div>
         <div className="flex justify-between text-xs text-gray-700">
-          <span>Total: {formatCurrency(grandTotal)}</span>
-          <span>Paid: {formatCurrency(totalPaid)}</span>
+          <span>Total Deal Cost: {formatCurrency(totalCashRequired)}</span>
+          <span>Paid: {formatCurrency(totalCashRequired - totalRemainingToPay)}</span>
         </div>
       </div>
 
-      {/* Table Header */}
-      <div className="border-b border-gray-200 pb-2">
-        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-700">
-          <div className="col-span-5">Purchase Item</div>
-          <div className="col-span-2">Amount</div>
-          <div className="col-span-2">Paid</div>
-          <div className="col-span-2 text-right">Remaining</div>
-          <div className="col-span-1"></div>
+      {/* Section B: Purchase Items by Timing */}
+      <div className="space-y-4">
+        <div className="bg-gray-50 border-l-2 border-gray-400 p-3">
+          <h3 className="text-sm font-semibold text-gray-800">B) Purchase Timeline</h3>
         </div>
-      </div>
 
-      {/* Categories */}
-      {categories.map(category => renderCategory(category))}
+        {/* Table Header */}
+        <div className="border-b border-gray-200 pb-2">
+          <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-700">
+            <div className="col-span-4">Payment Item</div>
+            <div className="col-span-2">Due Date</div>
+            <div className="col-span-2">Amount</div>
+            <div className="col-span-2">Status</div>
+            <div className="col-span-2 text-right">Outstanding</div>
+          </div>
+        </div>
+
+        {/* Timing Groups */}
+        {timingGroups.map(group => {
+          const items = getTimingGroupItems(group);
+          const total = getTimingGroupTotal(group);
+          const toPay = getTimingGroupToPay(group);
+          const color = timingGroupColors[group];
+
+          if (items.length === 0) return null;
+
+          return (
+            <div key={group} className="space-y-2">
+              {/* Group Header */}
+              <div className={`bg-${color}-50 border-l-2 border-${color}-400 p-2`}>
+                <div className="flex justify-between items-center">
+                  <h4 className={`text-xs font-semibold text-${color}-800`}>
+                    {group}
+                  </h4>
+                  <div className="flex gap-4 text-xs">
+                    <span className={`text-${color}-700`}>
+                      Total: {formatCurrency(total)}
+                    </span>
+                    {toPay > 0 && (
+                      <span className="text-red-700">
+                        To Pay: {formatCurrency(toPay)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Group Items */}
+              <div className="space-y-1 pl-2">
+                {items.map(item => (
+                  <div key={item.id} className="grid grid-cols-12 gap-2 items-center py-1 hover:bg-gray-50 rounded">
+                    <div className="col-span-4">
+                      <div className="text-xs font-medium text-gray-900">
+                        {item.name}
+                        {item.isOptional && <span className="text-gray-500 ml-1">(optional)</span>}
+                      </div>
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <div className="text-xs text-gray-600">
+                        {item.dueDate || '-'}
+                      </div>
+                    </div>
+                    
+                    <div className="col-span-2">
+                      {item.isCalculated ? (
+                        <div className="text-xs text-gray-600">
+                          {formatCurrency(item.amount)}
+                        </div>
+                      ) : (
+                        <CompactInput
+                          type="number"
+                          value={item.amount || ''}
+                          onChange={(value) => updatePaymentItem(item.id, 'amount', parseFloat(value) || 0)}
+                          placeholder="0"
+                          className="text-xs"
+                        />
+                      )}
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <CompactSelect
+                        value={item.status}
+                        onChange={(value) => updatePaymentItem(item.id, 'status', value as PaymentStatus)}
+                        options={[
+                          { value: 'Paid', label: 'Paid' },
+                          { value: 'To Pay', label: 'To Pay' },
+                        ]}
+                        className="text-xs"
+                      />
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <div className="text-xs text-gray-600 text-right">
+                        {item.status === 'To Pay' ? formatCurrency(item.amount) : '-'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

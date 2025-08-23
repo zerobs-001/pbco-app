@@ -740,31 +740,41 @@ export default function PropertyModelingPage({ propertyId }: { propertyId: strin
         return (
           <PurchaseSection
             data={{
-              purchasePrice: property.purchase_price || 0,
-              purchaseDate: property.purchase_date || '',
-              items: [], // Will be initialized with defaults in the component
               inputs: {
-                // Property Details
+                // A.1 Core property & buyer
                 propertyAddress: property.address || '',
                 state: '',
+                purchasers: '',
+                
+                // A.2 Price, valuation, rent, units
                 purchasePrice: property.purchase_price || 0,
                 valuationAtPurchase: property.current_value || property.purchase_price || 0,
                 rentPerWeek: (property.annual_rent || 0) / 52,
                 numberOfUnits: 1,
                 
-                // Contract Details
+                // A.3 Dates & durations
+                engagementDate: new Date().toISOString().split('T')[0],
                 contractDate: property.purchase_date || '',
                 daysToUnconditional: 14,
                 daysForSettlement: 42,
                 
-                // Loan Details
-                lvr: 80,
-                loanProduct: 'principal_interest',
-                interestRate: 5.5,
-                loanTermYears: 30,
+                // A.4 Lending parameters
+                lvr: loans && loans.length > 0 && property.purchase_price > 0
+                  ? (loans[0].principal_amount / property.purchase_price)
+                  : 0.80,
+                loanProduct: loans && loans.length > 0 && loans[0].type === 'interest_only' ? 'I/O' : 'P&I',
+                interestRate: loans && loans.length > 0 ? loans[0].interest_rate / 100 : 0.065,
+                loanTermYears: loans && loans.length > 0 ? loans[0].term_years : 30,
                 loanPreApproval: 0,
-                fundsAvailable: 0
-              }
+                
+                // A.5 Cash position
+                fundsAvailable: 0,
+                
+                // B.0 Purchase Summary percentages
+                depositPaidAtConditional: 0.05,
+                depositPaidAtUnconditional: 0.05,
+              },
+              paymentItems: [] // Will be initialized with defaults in the component
             }}
             onChange={handlePurchaseDataChange}
           />
