@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { Loan, LoanType } from '@/types';
 import ConfirmationModal from '../ui/ConfirmationModal';
-import CollapsibleSection from '../ui/CollapsibleSection';
+import CompactInput from '../ui/CompactInput';
+import CompactSelect from '../ui/CompactSelect';
+import CompactFormRow from '../ui/CompactFormRow';
 
 // Icons (simplified - you can replace with your icon system)
 const IconPlus = ({ className }: { className?: string }) => (
@@ -36,6 +38,7 @@ interface LoanFormData {
   principal_amount: number;
   interest_rate: number;
   term_years: number;
+  io_years: number;
   start_date: string;
 }
 
@@ -64,6 +67,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
     principal_amount: 0,
     interest_rate: 0,
     term_years: 30,
+    io_years: 0,
     start_date: new Date().toISOString().split('T')[0]
   });
 
@@ -74,6 +78,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
       principal_amount: 0,
       interest_rate: 0,
       term_years: 30,
+      io_years: 0,
       start_date: new Date().toISOString().split('T')[0]
     });
   };
@@ -94,6 +99,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
       principal_amount: loan.principal_amount,
       interest_rate: loan.interest_rate,
       term_years: loan.term_years,
+      io_years: loan.io_years || 0,
       start_date: loan.start_date
     });
   };
@@ -136,6 +142,14 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
       }
       if (!formData.interest_rate || formData.interest_rate <= 0) {
         alert('Please enter a valid interest rate');
+        return;
+      }
+      if (formData.type === 'interest_only' && (!formData.io_years || formData.io_years <= 0)) {
+        alert('Interest-only loans must have IO years greater than 0');
+        return;
+      }
+      if (formData.io_years && formData.io_years >= formData.term_years) {
+        alert('IO years must be less than the loan term');
         return;
       }
 
@@ -205,12 +219,17 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
   const totalPrincipal = loans.reduce((sum, loan) => sum + loan.principal_amount, 0);
   
   return (
-    <section className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Loan Details</h2>
-        <p className="text-sm text-[#6b7280] mt-1">
-          {loans.length} loan{loans.length !== 1 ? 's' : ''} • Total: {formatCurrency(totalPrincipal)}
-        </p>
+    <div className="space-y-4">
+      {/* Summary */}
+      <div className="bg-blue-50 border-l-2 border-blue-400 p-3">
+        <div className="flex justify-between items-center">
+          <span className="text-xs font-semibold text-blue-800">
+            {loans.length} loan{loans.length !== 1 ? 's' : ''}
+          </span>
+          <span className="text-sm font-bold text-blue-900">
+            Total: {formatCurrency(totalPrincipal)}
+          </span>
+        </div>
       </div>
 
       {/* Loan List */}
@@ -312,6 +331,12 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
                         <span className="text-[#6b7280]">Term:</span>
                         <span className="font-medium">{loan.term_years} years</span>
                       </div>
+                      {loan.io_years && loan.io_years > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-[#6b7280]">IO Period:</span>
+                          <span className="font-medium">{loan.io_years} years</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-[#6b7280]">Start Date:</span>
                         <span className="font-medium">{new Date(loan.start_date).toLocaleDateString()}</span>
@@ -366,7 +391,7 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
         cancelText="Cancel"
         variant="danger"
       />
-    </section>
+    </div>
   );
 }
 
@@ -381,8 +406,8 @@ interface LoanFormProps {
 function LoanForm({ formData, setFormData, onSave, onCancel, isEditing }: LoanFormProps) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium text-[#111827]">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-[#111827]">
           {isEditing ? 'Edit Loan' : 'Add New Loan'}
         </h3>
         <button
@@ -393,86 +418,83 @@ function LoanForm({ formData, setFormData, onSave, onCancel, isEditing }: LoanFo
         </button>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs font-medium text-[#6b7280] mb-1">Loan Name</label>
-          <input
-            type="text"
+      <div className="space-y-1">
+        <CompactFormRow label="Loan Name" required>
+          <CompactInput
             value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-            placeholder="e.g., Primary Mortgage, Construction Loan, etc."
+            onChange={(value) => setFormData(prev => ({ ...prev, name: value }))}
+            placeholder="e.g., Primary Mortgage"
           />
-        </div>
+        </CompactFormRow>
 
-        <div>
-          <label className="block text-xs font-medium text-[#6b7280] mb-1">Loan Type</label>
-          <select
+        <CompactFormRow label="Loan Type" required>
+          <CompactSelect
             value={formData.type}
-            onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as LoanType }))}
-            className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-          >
-            <option value="principal_interest">Principal & Interest</option>
-            <option value="interest_only">Interest Only</option>
-          </select>
-        </div>
+            onChange={(value) => setFormData(prev => ({ ...prev, type: value as LoanType }))}
+            options={[
+              { value: 'principal_interest', label: 'Principal & Interest' },
+              { value: 'interest_only', label: 'Interest Only' }
+            ]}
+          />
+        </CompactFormRow>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-1">Principal Amount</label>
-            <input
-              type="number"
-              value={formData.principal_amount || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, principal_amount: parseFloat(e.target.value) || 0 }))}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-1">Interest Rate (%)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.interest_rate || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, interest_rate: parseFloat(e.target.value) || 0 }))}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
+        <CompactFormRow label="Principal Amount" required>
+          <CompactInput
+            type="number"
+            value={formData.principal_amount ? formData.principal_amount.toString() : ''}
+            onChange={(value) => setFormData(prev => ({ ...prev, principal_amount: parseFloat(value) || 0 }))}
+            placeholder="0"
+          />
+        </CompactFormRow>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-1">Term (Years)</label>
-            <input
-              type="number"
-              value={formData.term_years || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, term_years: parseInt(e.target.value) || 30 }))}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-              placeholder="30"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#6b7280] mb-1">Start Date</label>
-            <input
-              type="date"
-              value={formData.start_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-            />
-          </div>
-        </div>
+        <CompactFormRow label="Interest Rate (%)" required>
+          <CompactInput
+            type="number"
+            step={0.01}
+            value={formData.interest_rate ? formData.interest_rate.toString() : ''}
+            onChange={(value) => setFormData(prev => ({ ...prev, interest_rate: parseFloat(value) || 0 }))}
+            placeholder="0.00"
+          />
+        </CompactFormRow>
 
-        <div className="flex gap-3 pt-2">
+        <CompactFormRow label="Term (Years)" required>
+          <CompactInput
+            type="number"
+            value={formData.term_years ? formData.term_years.toString() : ''}
+            onChange={(value) => setFormData(prev => ({ ...prev, term_years: parseInt(value) || 30 }))}
+            placeholder="30"
+          />
+        </CompactFormRow>
+
+        <CompactFormRow label="IO Years">
+          <CompactInput
+            type="number"
+            value={formData.io_years ? formData.io_years.toString() : ''}
+            onChange={(value) => setFormData(prev => ({ ...prev, io_years: parseInt(value) || 0 }))}
+            placeholder="0"
+            min={0}
+            max={formData.term_years - 1}
+          />
+        </CompactFormRow>
+
+        <CompactFormRow label="Start Date" required>
+          <CompactInput
+            type="date"
+            value={formData.start_date}
+            onChange={(value) => setFormData(prev => ({ ...prev, start_date: value }))}
+          />
+        </CompactFormRow>
+
+        <div className="flex gap-2 pt-3">
           <button
             onClick={onSave}
-            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#2563eb] rounded-lg hover:bg-[#1d4ed8]"
+            className="flex-1 px-3 py-2 text-xs font-medium text-white bg-[#2563eb] rounded-lg hover:bg-[#1d4ed8] transition-colors"
           >
             {isEditing ? 'Update Loan' : 'Add Loan'}
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2 text-sm font-medium text-[#6b7280] bg-white border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb]"
+            className="px-3 py-2 text-xs font-medium text-[#6b7280] bg-white border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors"
           >
             Cancel
           </button>

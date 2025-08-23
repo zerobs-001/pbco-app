@@ -60,6 +60,7 @@ export async function GET(
       purchase_date: propertyData.purchase_date,
       strategy: propertyData.strategy,
       cashflow_status: propertyData.cashflow_status || 'not_modeled',
+      status: propertyData.status || 'modelling',
       created_at: property.created_at,
       updated_at: property.updated_at,
       // Financial data from JSONB
@@ -199,6 +200,7 @@ export async function PATCH(
       purchase_date: propertyData.purchase_date,
       strategy: propertyData.strategy,
       cashflow_status: propertyData.cashflow_status || 'not_modeled',
+      status: propertyData.status || 'modelling',
       created_at: property.created_at,
       updated_at: property.updated_at,
       // Financial data from JSONB

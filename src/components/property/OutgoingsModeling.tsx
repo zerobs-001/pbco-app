@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import CollapsibleSection from "../ui/CollapsibleSection";
+import CompactInput from "../ui/CompactInput";
 
 interface OutgoingItem {
   id: string;
@@ -139,116 +139,103 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
     }
   };
 
-  const summary = (
-    <div className="font-medium text-[#111827]">
-      Total: {formatCurrency(totalOutgoings)}/year
-    </div>
-  );
-
   return (
-    <CollapsibleSection 
-      title="Outgoings Modeling" 
-      summary={summary}
-      defaultExpanded={false}
-    >
-      <div className="space-y-4">
-        {/* Summary Bar */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-red-800">Total Annual Outgoings</span>
-            <span className="text-lg font-bold text-red-900">{formatCurrency(totalOutgoings)}</span>
-          </div>
+    <div className="space-y-4">
+      {/* Summary */}
+      <div className="bg-red-50 border-l-2 border-red-400 p-3">
+        <div className="flex justify-between items-center">
+          <span className="text-xs font-semibold text-red-800">Total Annual Outgoings</span>
+          <span className="text-sm font-bold text-red-900">{formatCurrency(totalOutgoings)}</span>
         </div>
+      </div>
 
-        {/* Outgoing Items */}
-        <div className="space-y-3">
-          {outgoingItems.map((item) => (
-            <div key={item.id} className="border border-[#e5e7eb] rounded-lg p-4">
-              <div className="grid grid-cols-1 gap-3 items-center md:grid-cols-12">
-                {/* Name */}
-                <div className="col-span-1 md:col-span-4">
-                  <label className="block text-xs font-medium text-[#6b7280] mb-1">
-                    Expense Category
-                  </label>
-                  {item.isCustom ? (
-                    <input
-                      type="text"
-                      value={item.name}
-                      onChange={(e) => updateOutgoingItem(item.id, 'name', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-                    />
-                  ) : (
-                    <div className="text-sm font-medium text-[#111827] py-2">{item.name}</div>
-                  )}
-                </div>
+      {/* Table Header */}
+      <div className="border-b border-gray-200 pb-2">
+        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-700">
+          <div className="col-span-4">Expense Category</div>
+          <div className="col-span-3">Annual Amount</div>
+          <div className="col-span-2">Growth %</div>
+          <div className="col-span-2 text-right">Per Month</div>
+          <div className="col-span-1"></div>
+        </div>
+      </div>
 
-                {/* Annual Amount */}
-                <div className="col-span-1 md:col-span-3">
-                  <label className="block text-xs font-medium text-[#6b7280] mb-1">
-                    Annual Amount
-                  </label>
-                  <input
-                    type="number"
-                    value={item.amount || ''}
-                    onChange={(e) => updateOutgoingItem(item.id, 'amount', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-                    placeholder="0"
-                  />
+      {/* Outgoing Items Table */}
+      <div className="space-y-1">
+        {outgoingItems.map((item) => (
+          <div key={item.id} className="grid grid-cols-12 gap-2 items-center py-1 hover:bg-gray-50 rounded">
+            {/* Expense Category */}
+            <div className="col-span-4">
+              {item.isCustom ? (
+                <CompactInput
+                  value={item.name}
+                  onChange={(value) => updateOutgoingItem(item.id, 'name', value)}
+                  placeholder="Expense category"
+                  className="text-xs"
+                />
+              ) : (
+                <div className="text-xs font-medium text-gray-900 py-1 border-b border-transparent">
+                  {item.name}
                 </div>
+              )}
+            </div>
 
-                {/* Growth Rate */}
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block text-xs font-medium text-[#6b7280] mb-1">
-                    Growth %
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={item.growthRate || ''}
-                    onChange={(e) => updateOutgoingItem(item.id, 'growthRate', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-                    placeholder="0.0"
-                  />
-                </div>
+            {/* Annual Amount */}
+            <div className="col-span-3">
+              <CompactInput
+                type="number"
+                value={item.amount ? item.amount.toString() : ''}
+                onChange={(value) => updateOutgoingItem(item.id, 'amount', value)}
+                placeholder="0"
+                className="text-xs"
+              />
+            </div>
 
-                {/* Monthly Amount (Display) */}
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block text-xs font-medium text-[#6b7280] mb-1">
-                    Per Month
-                  </label>
-                  <div className="text-sm text-[#6b7280] py-2">
-                    {formatCurrency(item.amount / 12)}
-                  </div>
-                </div>
+            {/* Growth Rate */}
+            <div className="col-span-2">
+              <CompactInput
+                type="number"
+                step={0.1}
+                value={item.growthRate ? item.growthRate.toString() : ''}
+                onChange={(value) => updateOutgoingItem(item.id, 'growthRate', value)}
+                placeholder="0.0"
+                className="text-xs"
+              />
+            </div>
 
-                {/* Remove Button */}
-                <div className="col-span-1 md:col-span-1 flex justify-end">
-                  <button
-                    onClick={() => removeOutgoingItem(item.id)}
-                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                    title="Remove item"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
+            {/* Per Month (Display) */}
+            <div className="col-span-2">
+              <div className="text-xs text-gray-600 py-1 border-b border-transparent text-right">
+                {formatCurrency(item.amount / 12)}
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Add Custom Item Button */}
-        <button
-          onClick={addCustomOutgoingItem}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-[#2563eb] bg-[#f8fafc] border border-[#e5e7eb] border-dashed rounded-lg hover:bg-[#eff6ff] hover:border-[#2563eb] transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Custom Outgoing Item
-        </button>
+            {/* Remove Button */}
+            <div className="col-span-1 flex justify-end">
+              <button
+                onClick={() => removeOutgoingItem(item.id)}
+                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                title="Remove item"
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-    </CollapsibleSection>
+
+      {/* Add Custom Item Button */}
+      <button
+        onClick={addCustomOutgoingItem}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-[#2563eb] bg-[#f8fafc] border border-[#e5e7eb] border-dashed rounded hover:bg-[#eff6ff] hover:border-[#2563eb] transition-colors"
+      >
+        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+        Add Expense Item
+      </button>
+    </div>
   );
 }

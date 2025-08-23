@@ -59,6 +59,7 @@ export interface Property {
   purchase_date: string;
   strategy: InvestmentStrategy;
   cashflow_status: CashflowStatus;
+  status?: PropertyStatus;
   created_at: string;
   updated_at: string;
   // Financial data from JSONB
@@ -78,6 +79,8 @@ export type InvestmentStrategy = 'buy_hold' | 'manufacture_equity' | 'value_add_
 
 export type CashflowStatus = 'not_modeled' | 'modeling' | 'modeled' | 'error';
 
+export type PropertyStatus = 'modelling' | 'shortlisted' | 'bought' | 'sold';
+
 export interface Loan {
   id: string;
   property_id: string;
@@ -86,6 +89,7 @@ export interface Loan {
   principal_amount: number;
   interest_rate: number;
   term_years: number;
+  io_years?: number; // Interest-only period in years (0 for P&I loans)
   start_date: string;
   rate_step_ups?: RateStepUp[];
   created_at: string;

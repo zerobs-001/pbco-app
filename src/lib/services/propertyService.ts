@@ -291,6 +291,7 @@ export class PropertyService {
       purchase_date: dbProperty.purchase_date || propertyData.purchase_date,
       strategy: dbProperty.strategy || propertyData.strategy,
       cashflow_status: dbProperty.cashflow_status || propertyData.cashflow_status || 'not_modeled',
+      status: dbProperty.status || propertyData.status || 'modelling',
       created_at: dbProperty.created_at,
       updated_at: dbProperty.updated_at,
       // Financial data - check both top level (from API) and nested data (from direct DB)

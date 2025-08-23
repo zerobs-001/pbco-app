@@ -138,9 +138,52 @@
 
 ---
 
+---
+
+## DETAILED PROJECTIONS ENHANCEMENT - 4 PHASES
+
+### Phase 1: Critical Fixes (Immediate) 🔥
+**Priority**: URGENT - Current calculations are fundamentally flawed
+- [ ] **1.1 Fix IO Loan Logic** - Implement proper Interest-Only period handling
+- [ ] **1.2 Add Vacancy Modeling** - Essential for realistic projections  
+- [ ] **1.3 Implement Basic Tax Calculations** - Core requirement for investment analysis
+- [ ] **1.4 Rename Metrics** - Fix confusion between pre-tax vs after-tax cashflow
+- [ ] **1.5 Add IO Years Field** - UI component for specifying IO period
+- [ ] **1.6 Add Vacancy Rate Field** - UI component for vacancy assumptions
+- [ ] **1.7 Add Tax Rate Fields** - UI components for marginal tax and medicare levy
+
+### Phase 2: Enhanced Features (Short-term) 📈
+**Priority**: HIGH - Improve accuracy and add key metrics
+- [ ] **2.1 Add PM Fee Calculations** - Property management fees on collected rent
+- [ ] **2.2 Implement LVR/DSCR Metrics** - Key portfolio risk indicators
+- [ ] **2.3 Add Acquisition Costs** - Stamp duty and LMI at settlement
+- [ ] **2.4 Enhance Expense Categorization** - Separate other/insurance/rates/strata
+- [ ] **2.5 Add Depreciation Modeling** - Basic depreciation schedules
+- [ ] **2.6 Implement Rate Step-ups** - Post-IO rate increases
+
+### Phase 3: Advanced Strategies (Medium-term) 🏗️
+**Priority**: MEDIUM - Strategy-specific enhancements
+- [ ] **3.1 Manufacture Equity Strategy** - Capex, downtime, rent uplifts
+- [ ] **3.2 Value-Add Commercial Strategy** - Net lease, occupancy ramps
+- [ ] **3.3 Portfolio-level Aggregations** - Multi-property calculations
+- [ ] **3.4 Income Replacement Year** - Portfolio breakeven analysis
+- [ ] **3.5 Strategy Selection UI** - Property strategy configuration
+- [ ] **3.6 Advanced Loan Features** - Multiple loans per property
+
+### Phase 4: Polish & Compliance (Long-term) ✨
+**Priority**: LOW - Professional finishing touches
+- [ ] **4.1 Reference Data Integration** - Stamp duty/LMI rate lookups
+- [ ] **4.2 Sale Event Modeling** - Property disposal calculations
+- [ ] **4.3 Export Functionality** - CSV/JSON with disclaimers
+- [ ] **4.4 Comprehensive Validation** - Input validation and error handling
+- [ ] **4.5 Performance Optimization** - Calculation efficiency improvements
+- [ ] **4.6 Advanced UI Features** - Comparison views, sensitivity analysis
+
+---
+
 ## Current Status
 - **Phase 1**: 80% Complete
-- **Next Priority**: Set up Supabase project and test database connection
+- **Next Priority**: DETAILED PROJECTIONS PHASE 1 - Critical Fixes
 - **Development Environment**: ✅ Ready
 - **Project Structure**: ✅ Complete
 - **Type Definitions**: ✅ Complete
@@ -151,3 +194,4 @@
 - Ready to start implementing authentication system
 - Database schema includes all required tables with RLS policies
 - TypeScript types are comprehensive and match the functional specifications
+- **CRITICAL**: Detailed Projections component needs immediate fixes for IO loans and tax calculations
