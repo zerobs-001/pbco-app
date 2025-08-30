@@ -55,25 +55,25 @@ export default function PropertyAnalysis({
   assumptions
 }: PropertyAnalysisProps) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-[calc(100vh-260px)] sm:max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-300px)]">
       {/* Chart Tabs - ready for expansion */}
       <Tabs defaultValue="cashflow" className="flex flex-col h-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 flex-shrink-0">
           <TabsTrigger value="cashflow">Cashflow Analysis</TabsTrigger>
           <TabsTrigger value="debt">Debt Paydown</TabsTrigger>
           <TabsTrigger value="growth">Growth Analysis</TabsTrigger>
           <TabsTrigger value="projections">Detailed Projections</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="cashflow" className="flex-1 h-0">
+        <TabsContent value="cashflow" className="flex-1 min-h-0 max-h-full overflow-hidden">
           <CashflowChart projections={projections} yearsToShow={20} />
         </TabsContent>
 
-        <TabsContent value="debt" className="flex-1 h-0">
+        <TabsContent value="debt" className="flex-1 min-h-0 max-h-full overflow-hidden">
           <DebtPaydownChart projections={projections} loans={loans} yearsToShow={20} />
         </TabsContent>
 
-        <TabsContent value="growth" className="flex-1 h-0">
+        <TabsContent value="growth" className="flex-1 min-h-0 max-h-full overflow-hidden">
           <GrowthAnalysisChart 
             projections={projections} 
             initialInvestment={initialInvestment} 
@@ -81,9 +81,9 @@ export default function PropertyAnalysis({
           />
         </TabsContent>
 
-        <TabsContent value="projections" className="flex-1 h-0">
-          <Card className="h-full">
-            <CardContent className="h-full p-3 max-h-[calc(100vh-320px)] overflow-hidden">
+        <TabsContent value="projections" className="flex-1 min-h-0 max-h-full">
+          <Card className="h-full max-h-[calc(100vh-300px)] sm:max-h-[calc(100vh-320px)] lg:max-h-[calc(100vh-340px)]">
+            <CardContent className="h-full p-3 overflow-hidden">
               <DetailedProjectionsRestored 
                 propertyValue={propertyValue || projections[0]?.propertyValue || 500000}
                 totalIncome={totalIncome || 50000}

@@ -204,7 +204,7 @@ export default function PropertyLayout({
       onWidthChange={onPanelWidthChange}
       defaultWidth={450}
       minWidth={350}
-      maxWidth={650}
+      maxWidth={800}
       className="h-full"
     >
       {mainContent}

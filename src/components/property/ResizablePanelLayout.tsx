@@ -27,7 +27,7 @@ export default function ResizablePanelLayout({
   isOpen,
   defaultWidth = 400,
   minWidth = 300,
-  maxWidth = 600,
+  maxWidth = 800,
   onClose,
   onWidthChange,
   className

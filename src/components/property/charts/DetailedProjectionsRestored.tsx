@@ -550,7 +550,7 @@ export default function DetailedProjectionsRestored({
 
         {/* Grouped Table Container with Horizontal Scroll */}
         <div className="border border-[#e5e7eb] rounded-lg overflow-hidden flex-1 min-h-0">
-          <div className="overflow-x-auto h-full max-h-[500px] overflow-y-auto">
+          <div className="overflow-x-auto h-full overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="bg-[#f9fafb] border-b border-[#e5e7eb]">
                 <tr>

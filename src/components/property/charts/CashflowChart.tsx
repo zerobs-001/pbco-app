@@ -108,7 +108,7 @@ export default function CashflowChart({ projections, yearsToShow = 20 }: Cashflo
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden">
       <CardHeader className="flex-shrink-0">
         <CardTitle>Annual Cashflow ({yearsToShow} Years)</CardTitle>
         <div className="flex items-center gap-4 text-sm">
@@ -118,16 +118,16 @@ export default function CashflowChart({ projections, yearsToShow = 20 }: Cashflo
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <ChartContainer config={chartConfig} className="min-h-[300px] max-h-[450px] w-full">
-          <ResponsiveContainer width="99%" height="100%">
+      <CardContent className="flex-1 flex flex-col overflow-hidden">
+        <ChartContainer config={chartConfig} className="w-full h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[50vh] xl:max-h-[55vh] min-h-[300px] overflow-hidden">
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
               margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 20,
+                top: 10,
+                right: 15,
+                left: 10,
+                bottom: 10,
               }}
             >
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -144,7 +144,7 @@ export default function CashflowChart({ projections, yearsToShow = 20 }: Cashflo
               tickLine={false}
               tick={{ fontSize: 12 }}
               tickFormatter={formatCurrency}
-              width={80}
+              width={70}
             />
             
             {/* Zero reference line */}
