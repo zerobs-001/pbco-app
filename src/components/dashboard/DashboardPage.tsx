@@ -2,7 +2,11 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { propertyService } from "@/lib/services/propertyService";
+import { portfolioService } from "@/lib/services/portfolioService";
+import { userService } from "@/lib/services/userService";
 import { Property } from "@/types";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Helper function for consistent date formatting (client-side only)
 function formatDate(dateString: string): string {
@@ -36,38 +40,94 @@ function calculateDSCR(annualRent: number, annualExpenses: number, loan: any): s
 }
 
 export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
+  );
+}
+
+function DashboardContent() {
+  const { user, signOut } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [portfolio, setPortfolio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-
-  // Hardcoded portfolio ID for now (same as used in property creation)
-  const portfolioId = "e20784fd-d716-431a-a857-bfba1c661b6c";
 
   // Handle client-side mounting
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch properties on component mount
+  // Fetch portfolio and properties on component mount
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !user) return;
     
-    const fetchProperties = async () => {
+    const fetchPortfolioAndProperties = async () => {
       try {
         setLoading(true);
-        const propertiesData = await propertyService.getPropertiesByPortfolioId(portfolioId);
-        setProperties(propertiesData);
+        setError(null);
+        
+        console.log('🔥 Dashboard fetching portfolio for user:', user.id, user.email);
+        
+        // First, get the user's primary portfolio
+        const portfolioResult = await portfolioService.getUserPrimaryPortfolio(user.id);
+        console.log('🔥 Dashboard portfolio result:', portfolioResult);
+        
+        let currentPortfolio = null;
+        
+        if (!portfolioResult.success) {
+          console.error('🔥 Error fetching portfolio:', portfolioResult.error);
+          
+          // First ensure user profile exists
+          console.log('🔥 Ensuring user profile exists before creating portfolio...');
+          const userResult = await userService.ensureUserProfile(user);
+          console.log('🔥 User profile result:', userResult);
+          
+          if (!userResult.success) {
+            setError('Failed to set up user profile. Please try refreshing the page.');
+            return;
+          }
+          
+          // Try to create a portfolio if none exists
+          console.log('🔥 No portfolio found, trying to create one...');
+          const createResult = await portfolioService.createDefaultPortfolio(user.id);
+          console.log('🔥 Create portfolio result:', createResult);
+          
+          if (createResult.success) {
+            currentPortfolio = createResult.portfolio;
+            setPortfolio(currentPortfolio);
+          } else {
+            setError('Failed to load portfolio. Please try refreshing the page.');
+            return;
+          }
+        } else {
+          currentPortfolio = portfolioResult.portfolio;
+          setPortfolio(currentPortfolio);
+        }
+        
+        // Then fetch properties for this portfolio
+        if (currentPortfolio?.id) {
+          console.log('🔥 Fetching properties for portfolio:', currentPortfolio.id);
+          const propertiesData = await propertyService.getPropertiesByPortfolioId(currentPortfolio.id);
+          console.log('🔥 Properties fetched:', propertiesData?.length || 0);
+          setProperties(propertiesData);
+        } else {
+          console.log('🔥 No portfolio ID found, setting empty properties');
+          setProperties([]);
+        }
+        
       } catch (err) {
-        console.error('Error fetching properties:', err);
-        setError('Failed to load properties');
+        console.error('Error fetching portfolio and properties:', err);
+        setError('Failed to load portfolio data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProperties();
-  }, [portfolioId, mounted]);
+    fetchPortfolioAndProperties();
+  }, [user, mounted]);
 
   // Calculate portfolio KPIs
   const portfolioKPIs = useMemo(() => {
@@ -123,11 +183,15 @@ export default function DashboardPage() {
     );
   }
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   // Show loading state
   if (loading) {
     return (
       <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
-        <AppHeader />
+        <AppHeader user={user} onSignOut={handleSignOut} />
         <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -144,7 +208,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
-        <AppHeader />
+        <AppHeader user={user} onSignOut={handleSignOut} />
         <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -166,10 +230,10 @@ export default function DashboardPage() {
 
   return (
     <div className="font-plus min-h-screen w-full bg-[#f8fafc] text-[#111827]">
-      <AppHeader />
+      <AppHeader user={user} onSignOut={handleSignOut} />
       <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-6">
         <div className="flex flex-col gap-6">
-          <PortfolioHeader />
+          <PortfolioHeader portfolio={portfolio} />
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KpiCard 
               title="Total Portfolio Value" 
@@ -205,7 +269,11 @@ export default function DashboardPage() {
                 </a>
               </div>
               <div className="max-h-[600px] overflow-auto">
-                <PropertyTable properties={properties} />
+                {properties.length === 0 ? (
+                  <EmptyPropertiesState portfolio={portfolio} />
+                ) : (
+                  <PropertyTable properties={properties} />
+                )}
               </div>
             </div>
             <div className="flex flex-col gap-6">
@@ -219,11 +287,46 @@ export default function DashboardPage() {
   );
 }
 
-function PortfolioHeader() {
+function EmptyPropertiesState({ portfolio }: { portfolio?: any }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-6">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <IconPlus className="h-8 w-8 text-blue-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Welcome to Your Portfolio!</h3>
+        <p className="text-gray-600 mb-6 max-w-md">
+          {portfolio?.name || 'Your portfolio'} is ready to go. Start by adding your first property to begin modeling your investment journey.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <a 
+            href="/property/new" 
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            <IconPlus className="h-4 w-4" />
+            Add Your First Property
+          </a>
+          <button className="inline-flex items-center gap-2 bg-white text-gray-700 px-6 py-2 rounded-lg border border-gray-300 font-medium hover:bg-gray-50 transition-colors">
+            <IconFileText className="h-4 w-4" />
+            Import Properties
+          </button>
+        </div>
+        <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg max-w-md mx-auto">
+          <p className="text-sm text-green-800">
+            <strong>✅ Account Setup Complete!</strong><br />
+            Your portfolio "{portfolio?.name || 'My Investment Portfolio'}" has been created with default settings. You're ready to start modeling!
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PortfolioHeader({ portfolio }: { portfolio?: any }) {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-[#111827]">My Investment Portfolio</h1>
+        <h1 className="text-2xl font-bold text-[#111827]">{portfolio?.name || 'My Investment Portfolio'}</h1>
         <p className="text-[#6b7280] mt-1">Manage your properties and track cashflow projections</p>
       </div>
       <div className="flex gap-3">
@@ -448,7 +551,11 @@ function RecentActivity() {
   );
 }
 
-function AppHeader() {
+function AppHeader({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+  const getInitials = (email: string) => {
+    return email.split('@')[0].substring(0, 2).toUpperCase();
+  };
+
   return (
     <header className="border-b border-[#e5e7eb] bg-white">
       <div className="mx-auto max-w-[1400px] px-6 py-4">
@@ -456,7 +563,7 @@ function AppHeader() {
           <div className="flex items-center gap-8">
             <div className="text-xl font-bold text-[#111827]">Property Portfolio CF</div>
             <nav className="hidden md:flex items-center gap-6">
-              <a href="#" className="text-[#6b7280] hover:text-[#111827]">Dashboard</a>
+              <a href="/dashboard" className="text-[#6b7280] hover:text-[#111827]">Dashboard</a>
               <a href="#" className="text-[#6b7280] hover:text-[#111827]">Properties</a>
               <a href="#" className="text-[#6b7280] hover:text-[#111827]">Reports</a>
               <a href="#" className="text-[#6b7280] hover:text-[#111827]">Settings</a>
@@ -466,11 +573,35 @@ function AppHeader() {
             <button className="rounded-full p-2 text-[#6b7280] hover:bg-[#f3f4f6]">
               <IconBell className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-[#2563eb] flex items-center justify-center">
-                <span className="text-sm font-medium text-white">JD</span>
+            <div className="relative group">
+              <div className="flex items-center gap-2 cursor-pointer">
+                <div className="h-8 w-8 rounded-full bg-[#2563eb] flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">{getInitials(user?.email || 'U')}</span>
+                </div>
+                <span className="hidden md:block text-sm font-medium text-[#111827]">{user?.email}</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
-              <span className="hidden md:block text-sm font-medium text-[#111827]">John Doe</span>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-2">
+                  <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100">
+                    Signed in as<br />
+                    <strong>{user?.email}</strong>
+                  </div>
+                  <button
+                    onClick={onSignOut}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign Out
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

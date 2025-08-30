@@ -1,29 +1,34 @@
 "use client";
 
 import React from 'react';
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface CompactFormRowProps {
   label: string;
   required?: boolean;
   children: React.ReactNode;
   className?: string;
+  htmlFor?: string;
 }
 
 const CompactFormRow: React.FC<CompactFormRowProps> = ({
   label,
   required = false,
   children,
-  className = ''
+  className,
+  htmlFor
 }) => {
   return (
-    <div className={`flex items-center py-2 ${className}`}>
-      <div className="w-2/5 pr-3">
-        <label className="text-xs font-medium text-gray-700 leading-tight">
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-      </div>
-      <div className="w-3/5">
+    <div className={cn("space-y-2 py-3", className)}>
+      <Label 
+        htmlFor={htmlFor}
+        className="text-sm font-medium text-secondary leading-tight"
+      >
+        {label}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </Label>
+      <div>
         {children}
       </div>
     </div>

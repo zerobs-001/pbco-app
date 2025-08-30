@@ -34,10 +34,11 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
     <div className="space-y-4">
       {/* Growth Rates */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Growth Rates</h3>
+        <h3 className="text-sm font-semibold text-secondary mb-2">Growth Rates</h3>
         <div className="space-y-1">
-          <CompactFormRow label="Rent Growth (% p.a.)" required>
+          <CompactFormRow label="Rent Growth (% p.a.)" required htmlFor="rent-growth">
             <CompactInput
+              id="rent-growth"
               type="number"
               step={0.1}
               value={assumptions.rentGrowth ? assumptions.rentGrowth.toString() : ''}
@@ -46,8 +47,9 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Capital Growth (% p.a.)" required>
+          <CompactFormRow label="Capital Growth (% p.a.)" required htmlFor="capital-growth">
             <CompactInput
+              id="capital-growth"
               type="number"
               step={0.1}
               value={assumptions.capitalGrowth ? assumptions.capitalGrowth.toString() : ''}
@@ -56,8 +58,9 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Inflation Rate (% p.a.)" required>
+          <CompactFormRow label="Inflation Rate (% p.a.)" required htmlFor="inflation-rate">
             <CompactInput
+              id="inflation-rate"
               type="number"
               step={0.1}
               value={assumptions.inflationRate ? assumptions.inflationRate.toString() : ''}
@@ -69,11 +72,12 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
       </div>
 
       {/* Tax & Financial */}
-      <div className="pt-3 border-t border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Tax & Financial</h3>
+      <div className="pt-3 border-t border-border">
+        <h3 className="text-sm font-semibold text-secondary mb-2">Tax & Financial</h3>
         <div className="space-y-1">
-          <CompactFormRow label="Marginal Tax Rate (%)" required>
+          <CompactFormRow label="Marginal Tax Rate (%)" required htmlFor="tax-rate">
             <CompactInput
+              id="tax-rate"
               type="number"
               step={0.1}
               value={assumptions.taxRate ? assumptions.taxRate.toString() : ''}
@@ -82,8 +86,9 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Medicare Levy (%)">
+          <CompactFormRow label="Medicare Levy (%)" htmlFor="medicare-levy">
             <CompactInput
+              id="medicare-levy"
               type="number"
               step={0.1}
               value={assumptions.medicareLevy ? assumptions.medicareLevy.toString() : ''}
@@ -92,8 +97,9 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Discount Rate (% p.a.)">
+          <CompactFormRow label="Discount Rate (% p.a.)" htmlFor="discount-rate">
             <CompactInput
+              id="discount-rate"
               type="number"
               step={0.1}
               value={assumptions.discountRate ? assumptions.discountRate.toString() : ''}
@@ -102,8 +108,9 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
             />
           </CompactFormRow>
 
-          <CompactFormRow label="Depreciation Rate (%)">
+          <CompactFormRow label="Depreciation Rate (%)" htmlFor="depreciation-rate">
             <CompactInput
+              id="depreciation-rate"
               type="number"
               step={0.1}
               value={assumptions.depreciationRate ? assumptions.depreciationRate.toString() : ''}
@@ -115,11 +122,12 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
       </div>
 
       {/* Property Management */}
-      <div className="pt-3 border-t border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Property Management</h3>
+      <div className="pt-3 border-t border-border">
+        <h3 className="text-sm font-semibold text-secondary mb-2">Property Management</h3>
         <div className="space-y-1">
-          <CompactFormRow label="Vacancy Rate (%)" required>
+          <CompactFormRow label="Vacancy Rate (%)" required htmlFor="vacancy-rate">
             <CompactInput
+              id="vacancy-rate"
               type="number"
               step={0.1}
               value={assumptions.vacancyRate ? assumptions.vacancyRate.toString() : ''}
@@ -128,8 +136,9 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
             />
           </CompactFormRow>
 
-          <CompactFormRow label="PM Fee (% of rent)" required>
+          <CompactFormRow label="PM Fee (% of rent)" required htmlFor="pm-fee-rate">
             <CompactInput
+              id="pm-fee-rate"
               type="number"
               step={0.1}
               value={assumptions.pmFeeRate ? assumptions.pmFeeRate.toString() : ''}
@@ -141,8 +150,8 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
       </div>
 
       {/* Quick Presets */}
-      <div className="pt-3 border-t border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Quick Presets</h3>
+      <div className="pt-3 border-t border-border">
+        <h3 className="text-sm font-semibold text-secondary mb-2">Quick Presets</h3>
         <div className="flex gap-2">
           <button
             onClick={() => onAssumptionsChange({
@@ -156,7 +165,7 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
               pmFeeRate: 8.0,
               depreciationRate: 2.5
             })}
-            className="px-2 py-1 text-xs font-medium text-[#2563eb] bg-[#eff6ff] border border-[#2563eb] rounded hover:bg-[#dbeafe] transition-colors"
+            className="px-3 py-1 text-xs font-medium text-secondary bg-secondary/10 border border-secondary rounded hover:bg-secondary/20 transition-colors"
           >
             Conservative
           </button>
@@ -172,7 +181,7 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
               pmFeeRate: 8.5,
               depreciationRate: 2.5
             })}
-            className="px-2 py-1 text-xs font-medium text-[#2563eb] bg-[#eff6ff] border border-[#2563eb] rounded hover:bg-[#dbeafe] transition-colors"
+            className="px-3 py-1 text-xs font-medium text-secondary bg-secondary/10 border border-secondary rounded hover:bg-secondary/20 transition-colors"
           >
             Moderate
           </button>
@@ -188,7 +197,7 @@ export default function GrowthAssumptions({ assumptions, onAssumptionsChange }: 
               pmFeeRate: 9.0,
               depreciationRate: 2.5
             })}
-            className="px-2 py-1 text-xs font-medium text-[#2563eb] bg-[#eff6ff] border border-[#2563eb] rounded hover:bg-[#dbeafe] transition-colors"
+            className="px-3 py-1 text-xs font-medium text-secondary bg-secondary/10 border border-secondary rounded hover:bg-secondary/20 transition-colors"
           >
             Aggressive
           </button>

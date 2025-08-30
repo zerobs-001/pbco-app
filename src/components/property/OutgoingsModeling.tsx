@@ -142,16 +142,16 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="bg-red-50 border-l-2 border-red-400 p-3">
+      <div className="bg-secondary/10 border-l-4 border-secondary p-4">
         <div className="flex justify-between items-center">
-          <span className="text-xs font-semibold text-red-800">Total Annual Outgoings</span>
-          <span className="text-sm font-bold text-red-900">{formatCurrency(totalOutgoings)}</span>
+          <span className="text-sm font-semibold text-secondary">Total Annual Outgoings</span>
+          <span className="text-lg font-bold text-secondary">{formatCurrency(totalOutgoings)}</span>
         </div>
       </div>
 
       {/* Table Header */}
-      <div className="border-b border-gray-200 pb-2">
-        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-700">
+      <div className="border-b border-border pb-2">
+        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-secondary">
           <div className="col-span-4">Expense Category</div>
           <div className="col-span-3">Annual Amount</div>
           <div className="col-span-2">Growth %</div>
@@ -163,7 +163,7 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
       {/* Outgoing Items Table */}
       <div className="space-y-1">
         {outgoingItems.map((item) => (
-          <div key={item.id} className="grid grid-cols-12 gap-2 items-center py-1 hover:bg-gray-50 rounded">
+          <div key={item.id} className="grid grid-cols-12 gap-2 items-center py-1 hover:bg-secondary/5 rounded">
             {/* Expense Category */}
             <div className="col-span-4">
               {item.isCustom ? (
@@ -171,10 +171,10 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
                   value={item.name}
                   onChange={(value) => updateOutgoingItem(item.id, 'name', value)}
                   placeholder="Expense category"
-                  className="text-xs"
+                  className="text-xs h-8"
                 />
               ) : (
-                <div className="text-xs font-medium text-gray-900 py-1 border-b border-transparent">
+                <div className="text-xs font-medium text-foreground py-2 px-1">
                   {item.name}
                 </div>
               )}
@@ -183,11 +183,11 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
             {/* Annual Amount */}
             <div className="col-span-3">
               <CompactInput
-                type="number"
+                type="currency"
                 value={item.amount ? item.amount.toString() : ''}
-                onChange={(value) => updateOutgoingItem(item.id, 'amount', value)}
+                onChange={(value) => updateOutgoingItem(item.id, 'amount', value.replace(/,/g, ''))}
                 placeholder="0"
-                className="text-xs"
+                className="text-xs h-8"
               />
             </div>
 
@@ -199,13 +199,13 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
                 value={item.growthRate ? item.growthRate.toString() : ''}
                 onChange={(value) => updateOutgoingItem(item.id, 'growthRate', value)}
                 placeholder="0.0"
-                className="text-xs"
+                className="text-xs h-8"
               />
             </div>
 
             {/* Per Month (Display) */}
             <div className="col-span-2">
-              <div className="text-xs text-gray-600 py-1 border-b border-transparent text-right">
+              <div className="text-xs text-muted-foreground py-2 px-1 text-right">
                 {formatCurrency(item.amount / 12)}
               </div>
             </div>
@@ -214,7 +214,7 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
             <div className="col-span-1 flex justify-end">
               <button
                 onClick={() => removeOutgoingItem(item.id)}
-                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                className="p-1 text-destructive hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
                 title="Remove item"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@ export default function OutgoingsModeling({ onOutgoingsChange, initialExpenses =
       {/* Add Custom Item Button */}
       <button
         onClick={addCustomOutgoingItem}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-[#2563eb] bg-[#f8fafc] border border-[#e5e7eb] border-dashed rounded hover:bg-[#eff6ff] hover:border-[#2563eb] transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-secondary bg-secondary/10 border border-secondary border-dashed rounded hover:bg-secondary/20 hover:border-secondary transition-colors"
       >
         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

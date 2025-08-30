@@ -1,30 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+import { createClient } from '@/lib/supabase/server';
+import { requireAuth, canAccessPortfolio } from '@/lib/middleware/auth';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await requireAuth();
+    
     const resolvedParams = await params;
     const propertyId = resolvedParams.id;
     const loanData = await request.json();
 
-    console.log('🔄 API: Storing loan data in property JSONB:', propertyId, loanData);
+    // Create authenticated Supabase client
+    const supabase = await createClient();
 
-    // WORKAROUND: Store loan data in property's JSONB data column instead of loans table
-    // This bypasses the persistent Supabase schema cache issues with the loans table
-    
     // First, get the current property data
     const { data: currentProperty, error: fetchError } = await supabase
       .from('properties')
@@ -35,6 +26,27 @@ export async function PUT(
     if (fetchError) {
       console.error('Error fetching property:', fetchError);
       throw fetchError;
+    }
+
+    // Verify portfolio ownership or admin access
+    const { data: portfolio, error: portfolioError } = await supabase
+      .from('portfolios')
+      .select('user_id')
+      .eq('id', currentProperty.portfolio_id)
+      .single();
+
+    if (portfolioError || !portfolio) {
+      return NextResponse.json(
+        { error: 'Portfolio not found' },
+        { status: 404 }
+      );
+    }
+
+    if (!canAccessPortfolio(user, portfolio.user_id)) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
     }
 
     // Merge loan data into the property's data JSONB column
@@ -102,10 +114,10 @@ export async function PUT(
     console.log('✅ Loan data stored in property JSONB successfully');
     return NextResponse.json({ property: mappedProperty });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error storing loan data:', error);
     return NextResponse.json(
-      { error: 'Failed to store loan data', details: error.message },
+      { error: 'Failed to store loan data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

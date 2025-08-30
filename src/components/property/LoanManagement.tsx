@@ -221,12 +221,12 @@ export default function LoanManagement({ loans, onLoansChange, propertyId }: Loa
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="bg-blue-50 border-l-2 border-blue-400 p-3">
+      <div className="bg-primary/10 border-l-4 border-primary p-4">
         <div className="flex justify-between items-center">
-          <span className="text-xs font-semibold text-blue-800">
+          <span className="text-sm font-semibold text-secondary">
             {loans.length} loan{loans.length !== 1 ? 's' : ''}
           </span>
-          <span className="text-sm font-bold text-blue-900">
+          <span className="text-lg font-bold text-secondary">
             Total: {formatCurrency(totalPrincipal)}
           </span>
         </div>
@@ -440,9 +440,9 @@ function LoanForm({ formData, setFormData, onSave, onCancel, isEditing }: LoanFo
 
         <CompactFormRow label="Principal Amount" required>
           <CompactInput
-            type="number"
+            type="currency"
             value={formData.principal_amount ? formData.principal_amount.toString() : ''}
-            onChange={(value) => setFormData(prev => ({ ...prev, principal_amount: parseFloat(value) || 0 }))}
+            onChange={(value) => setFormData(prev => ({ ...prev, principal_amount: parseFloat(value.replace(/,/g, '')) || 0 }))}
             placeholder="0"
           />
         </CompactFormRow>

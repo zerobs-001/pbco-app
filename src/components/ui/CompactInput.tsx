@@ -1,10 +1,13 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { formatNumber, unformatNumber } from "@/lib/utils/formatters";
 
 interface CompactInputProps {
   id?: string;
-  type?: 'text' | 'number' | 'date' | 'email';
+  type?: 'text' | 'number' | 'date' | 'email' | 'password' | 'currency';
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -21,30 +24,78 @@ const CompactInput: React.FC<CompactInputProps> = ({
   value,
   onChange,
   placeholder,
-  className = '',
+  className,
   disabled = false,
   min,
   max,
   step
 }) => {
+  const [displayValue, setDisplayValue] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Handle currency/number formatting
+  const isCurrencyField = type === 'currency' || type === 'number';
+
+  useEffect(() => {
+    if (isCurrencyField && !isFocused) {
+      // Format for display when not focused
+      setDisplayValue(value ? formatNumber(value) : '');
+    } else {
+      // Show raw value when focused or non-currency field
+      setDisplayValue(value?.toString() || '');
+    }
+  }, [value, isFocused, isCurrencyField]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    
+    if (isCurrencyField) {
+      // Remove formatting and validate
+      const unformatted = unformatNumber(inputValue);
+      setDisplayValue(inputValue);
+      onChange(unformatted);
+    } else {
+      setDisplayValue(inputValue);
+      onChange(inputValue);
+    }
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    if (isCurrencyField) {
+      // Show unformatted value for editing
+      setDisplayValue(unformatNumber(value?.toString() || ''));
+    }
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    if (isCurrencyField) {
+      // Format for display
+      setDisplayValue(value ? formatNumber(value) : '');
+    }
+  };
+
   return (
-    <input
+    <Input
       id={id}
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+      type={isCurrencyField ? 'text' : type}
+      value={displayValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
       placeholder={placeholder}
       disabled={disabled}
       min={min}
       max={max}
       step={step}
-      className={`
-        w-full bg-transparent border-0 border-b border-gray-300
-        focus:border-b-2 focus:border-green-500 focus:outline-none
-        py-1 px-0 text-sm transition-colors duration-200
-        disabled:text-gray-400 disabled:cursor-not-allowed
-        ${className}
-      `}
+      className={cn(
+        "h-9 px-3 py-2",
+        "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "border-input bg-background",
+        "transition-colors duration-200",
+        className
+      )}
     />
   );
 };

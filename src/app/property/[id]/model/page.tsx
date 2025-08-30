@@ -1,4 +1,5 @@
-import PropertyModelingPage from '@/components/property/PropertyModelingPage';
+import PropertyModelingPageRefactored from '@/components/property/PropertyModelingPageRefactored';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 export default async function PropertyModeling({
   params,
@@ -6,5 +7,9 @@ export default async function PropertyModeling({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await params;
-  return <PropertyModelingPage propertyId={resolvedParams.id} />;
+  return (
+    <ProtectedRoute>
+      <PropertyModelingPageRefactored propertyId={resolvedParams.id} />
+    </ProtectedRoute>
+  );
 }

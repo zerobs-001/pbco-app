@@ -1,6 +1,8 @@
 "use client";
 
 import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface CompactSelectProps {
   id?: string;
@@ -18,34 +20,34 @@ const CompactSelect: React.FC<CompactSelectProps> = ({
   onChange,
   options,
   placeholder,
-  className = '',
+  className,
   disabled = false
 }) => {
+  // Filter out options with empty string values to prevent Radix UI error
+  const validOptions = options.filter(option => option.value !== '');
+  
   return (
-    <select
-      id={id}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className={`
-        w-full bg-transparent border-0 border-b border-gray-300
-        focus:border-b-2 focus:border-green-500 focus:outline-none
-        py-1 px-0 text-sm transition-colors duration-200
-        disabled:text-gray-400 disabled:cursor-not-allowed
-        ${className}
-      `}
-    >
-      {placeholder && (
-        <option value="" disabled>
-          {placeholder}
-        </option>
-      )}
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger 
+        id={id}
+        className={cn(
+          "h-9 px-3 py-2",
+          "focus:ring-2 focus:ring-primary focus:ring-offset-2",
+          "border-input bg-background",
+          "transition-colors duration-200",
+          className
+        )}
+      >
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {validOptions.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
 

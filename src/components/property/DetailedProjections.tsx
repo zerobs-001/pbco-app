@@ -549,14 +549,6 @@ export default function DetailedProjections({
       defaultExpanded={false}
     >
       <div className="space-y-4">
-        {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-sm text-blue-800">
-            <strong>30-Year Financial Projections:</strong> Metrics are organized into logical groups. Click group headers to expand/collapse sections. 
-            Hover over the ℹ️ icon next to any metric to see its calculation formula. Scroll horizontally to view all years.
-          </p>
-        </div>
-
         {/* Grouped Table Container with Horizontal Scroll */}
         <div className="border border-[#e5e7eb] rounded-lg overflow-hidden">
           <div className="overflow-x-auto">

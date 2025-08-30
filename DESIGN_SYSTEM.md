@@ -54,15 +54,41 @@
 - **Interactive**: Hover effects, border on focus
 - **Highlighted**: Blue-50 background, blue border
 
-### Forms
-- **Input**: Gray border, focus blue border, rounded-md
-- **Select**: Consistent with input styling
-- **Checkbox/Radio**: Custom styled with blue accent
+### Forms - Compact Styling (NEW)
+- **CompactInput**: Underline-only styling with gray border, green focus
+  - `border-b border-gray-300` - Default state
+  - `focus:border-b-2 focus:border-green-500` - Focus state
+  - `py-1 px-0` - Minimal padding
+  - `bg-transparent` - Transparent background
+- **CompactSelect**: Consistent with CompactInput styling
+- **CompactFormRow**: 40/60 label-to-input ratio layout
+  - `w-2/5` for labels (40% width)
+  - `w-3/5` for inputs (60% width)
+  - `py-2` for compact vertical spacing
+- **Form Layout**: Tabular feel with left-aligned labels
 
-### Navigation
-- **Sidebar**: Dark background, white text
-- **Top Bar**: White background, subtle border
-- **Breadcrumbs**: Gray text, blue active state
+### Navigation - Updated Layout
+- **Left Navigation Panel**: 25% width on desktop, slide-out on mobile
+  - Full vertical height (excluding global header)
+  - Collapsible to icons only
+  - Mobile: overlay slide-out
+- **Right Panel**: Sliding panel from left navigation
+  - Resizable width (300px to 60% of screen)
+  - Handle with left arrow for closing
+  - Internal scrolling for content
+  - Main content adjusts width when open
+- **Global Header**: Fixed height, contains main navigation
+
+### Panel Components
+- **RightPanel**: Sliding panel with resize functionality
+  - Smooth slide-in/out animation
+  - Resize handle with drag functionality
+  - Constrained to viewport height
+  - Internal scrolling for content
+- **NavigationPanel**: Left navigation with collapsible state
+  - Full height layout
+  - Icon-only collapsed state
+  - Mobile-responsive overlay
 
 ## 📱 **Layout & Spacing**
 
@@ -84,6 +110,12 @@
 - **Tablet**: 640px - 1024px
 - **Desktop**: > 1024px
 
+### Layout Patterns - Updated
+- **Main Content Area**: `h-[calc(100vh-80px)]` for full viewport height
+- **Panel Integration**: Dynamic margin adjustment based on right panel state
+- **Mobile Responsiveness**: Slide-out navigation overlay
+- **Compact Forms**: Reduced spacing with `space-y-1` for tight layouts
+
 ## 🎭 **Interactive States**
 
 ### Hover Effects
@@ -93,7 +125,8 @@
 
 ### Focus States
 - **All interactive elements**: Blue ring outline
-- **Forms**: Blue border
+- **CompactInput**: Green border with 2px thickness
+- **CompactSelect**: Consistent green focus state
 
 ### Loading States
 - **Spinners**: Blue color, consistent sizing
@@ -112,6 +145,13 @@
 - **Negative**: Red text and icons
 - **Neutral**: Gray text
 
+### Chart Enhancements - NEW
+- **Dual Y-Axes**: Separate scales for different data types
+- **Dynamic Scaling**: Y-axis adjusts to prevent overflow
+- **Chart Toggling**: Switch between different chart types
+- **Stacked Bar Charts**: Multiple series in single chart
+- **Collapsible Data Tables**: Raw data display under charts
+
 ## 🔄 **Animation & Transitions**
 
 ### Duration
@@ -123,27 +163,36 @@
 - **Standard**: ease-in-out
 - **Bounce**: cubic-bezier(0.68, -0.55, 0.265, 1.55)
 
+### Panel Animations - NEW
+- **Slide Transitions**: `transform transition-transform duration-300 ease-out`
+- **Resize Animations**: Smooth width adjustments
+- **Overlay Transitions**: Mobile navigation slide-in/out
+
 ## 📄 **Page Templates**
 
-### Standard Page Structure
+### Property Modeling Page - Updated Structure
 ```
-Header (Navigation)
-├── Page Title
-├── Breadcrumbs (if applicable)
-├── Action Buttons
-└── Content Area
-    ├── Main Content
-    ├── Sidebar (if applicable)
-    └── Footer
+Global Header (Fixed)
+├── Left Navigation Panel (25% width, collapsible)
+│   ├── Navigation Items
+│   └── Collapse Toggle
+├── Main Content Area (Dynamic width)
+│   ├── Charts Section
+│   ├── Detailed Projections
+│   └── Milestones Timeline
+└── Right Panel (Sliding, resizable)
+    ├── Panel Header with Close Handle
+    ├── Section Content (Scrollable)
+    └── Panel Footer
 ```
 
-### Form Page Structure
+### Form Page Structure - Updated
 ```
 Header
 ├── Form Title
 ├── Progress Indicator (if multi-step)
 └── Form Content
-    ├── Form Fields
+    ├── CompactFormRow Layout
     ├── Validation Messages
     └── Action Buttons
 ```
@@ -161,3 +210,46 @@ Header
 - **Success**: Green-600
 - **Warning**: Orange-600
 - **Error**: Red-600
+
+### Navigation Icons - NEW
+- **ChevronLeftIcon**: Right panel close handle
+- **ChevronRightIcon**: Navigation expand/collapse
+- **PlusCircleIcon**: Add items
+- **MinusCircleIcon**: Remove items
+
+## 🎯 **Form Patterns - NEW**
+
+### Compact Form Styling
+- **Underline Inputs**: Only bottom border visible
+- **Tabular Layout**: Labels left, inputs right
+- **Minimal Spacing**: `space-y-1` for tight layouts
+- **Calculated Fields**: Read-only with gray text and underline
+
+### Purchase Section Pattern
+- **Input Groups**: Logical grouping with colored headers
+- **Timing Groups**: Color-coded payment timing categories
+- **Summary Bars**: Compact financial summaries
+- **Status Indicators**: Paid/To Pay status tracking
+
+### Table Patterns
+- **Grid Layout**: 12-column grid for consistent alignment
+- **Right Alignment**: Monetary values right-aligned
+- **Hover States**: Subtle background changes on hover
+- **Status Colors**: Green for paid, red for outstanding
+
+## 📱 **Mobile Responsiveness - Updated**
+
+### Navigation
+- **Left Panel**: Overlay slide-out on mobile
+- **Right Panel**: Full-width on mobile with close handle
+- **Touch Targets**: Minimum 44px for mobile interaction
+
+### Forms
+- **Compact Styling**: Maintained on mobile
+- **Responsive Grid**: Adapts to smaller screens
+- **Touch-Friendly**: Appropriate input sizes for mobile
+
+### Charts
+- **Responsive Charts**: Scale appropriately on mobile
+- **Touch Interaction**: Chart interactions work on touch devices
+- **Mobile-Optimized**: Simplified layouts for small screens

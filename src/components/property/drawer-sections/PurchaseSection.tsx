@@ -544,8 +544,8 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
     <div className="space-y-6">
       {/* DEAL INPUTS (renamed from A) Inputs) */}
       <div className="space-y-4">
-        <div className="bg-gray-50 border-l-2 border-gray-400 p-3">
-          <h3 className="text-sm font-semibold text-gray-800">DEAL INPUTS</h3>
+        <div className="bg-primary/10 border-l-4 border-primary p-4">
+          <h3 className="text-sm font-semibold text-primary">DEAL INPUTS</h3>
         </div>
         
         <div className="space-y-1">
@@ -610,7 +610,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
           {/* A.2 Price, valuation, rent, units */}
           <CompactFormRow label="Purchase Price" required>
             <CompactInput
-              type="number"
+              type="currency"
               value={inputs.purchasePrice || ''}
               onChange={(value) => updateInput('purchasePrice', value)}
               placeholder="0"
@@ -619,7 +619,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
           <CompactFormRow label="Valuation at Purchase">
             <CompactInput
-              type="number"
+              type="currency"
               value={inputs.valuationAtPurchase || ''}
               onChange={(value) => updateInput('valuationAtPurchase', value)}
               placeholder="0"
@@ -635,7 +635,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
           <CompactFormRow label="Rent Per Week">
             <CompactInput
-              type="number"
+              type="currency"
               value={inputs.rentPerWeek || ''}
               onChange={(value) => updateInput('rentPerWeek', value)}
               placeholder="0"
@@ -731,7 +731,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
           <CompactFormRow label="Loan pre-approval">
             <CompactInput
-              type="number"
+              type="currency"
               value={inputs.loanPreApproval || ''}
               onChange={(value) => updateInput('loanPreApproval', value)}
               placeholder="0"
@@ -748,7 +748,7 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
           {/* A.5 Cash position */}
           <CompactFormRow label="Funds Available">
             <CompactInput
-              type="number"
+              type="currency"
               value={inputs.fundsAvailable || ''}
               onChange={(value) => updateInput('fundsAvailable', value)}
               placeholder="0"
@@ -772,8 +772,8 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
       {/* PURCHASE SUMMARY (renamed from B.0) Purchase Summary) */}
       <div className="space-y-4">
-        <div className="bg-blue-50 border-l-2 border-blue-400 p-3">
-          <h3 className="text-sm font-semibold text-blue-800">PURCHASE SUMMARY</h3>
+        <div className="bg-primary/10 border-l-4 border-primary p-4">
+          <h3 className="text-sm font-semibold text-primary">PURCHASE SUMMARY</h3>
         </div>
         
         <div className="space-y-1">
@@ -836,8 +836,8 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
 
       {/* PURCHASE COSTS (renamed from B) Purchase Timeline) */}
       <div className="space-y-4">
-        <div className="bg-gray-50 border-l-2 border-gray-400 p-3">
-          <h3 className="text-sm font-semibold text-gray-800">PURCHASE COSTS</h3>
+        <div className="bg-primary/10 border-l-4 border-primary p-4">
+          <h3 className="text-sm font-semibold text-primary">PURCHASE COSTS</h3>
         </div>
 
         {/* Table Header */}
@@ -863,17 +863,17 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
           return (
             <div key={group} className="space-y-2">
               {/* Group Header */}
-              <div className={`bg-${color}-50 border-l-2 border-${color}-400 p-2`}>
+              <div className="bg-secondary/10 border-l-4 border-secondary p-3">
                 <div className="flex justify-between items-center">
-                  <h4 className={`text-xs font-semibold text-${color}-800`}>
+                  <h4 className="text-sm font-semibold text-secondary">
                     {group}
                   </h4>
                   <div className="flex gap-4 text-xs">
-                    <span className={`text-${color}-700`}>
+                    <span className="text-secondary">
                       Total: {formatCurrency(total)}
                     </span>
                     {toPay > 0 && (
-                      <span className="text-red-700">
+                      <span className="text-destructive">
                         To Pay: {formatCurrency(toPay)}
                       </span>
                     )}
@@ -905,9 +905,9 @@ const PurchaseSection: React.FC<PurchaseSectionProps> = ({
                         </div>
                       ) : (
                         <CompactInput
-                          type="number"
+                          type="currency"
                           value={item.amount || ''}
-                          onChange={(value) => updatePaymentItem(item.id, 'amount', parseFloat(value) || 0)}
+                          onChange={(value) => updatePaymentItem(item.id, 'amount', parseFloat(value.replace(/,/g, '')) || 0)}
                           placeholder="0"
                           className="text-xs"
                         />

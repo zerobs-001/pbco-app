@@ -52,9 +52,9 @@ const PropertyDetailsSection: React.FC<PropertyDetailsSectionProps> = ({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0">
       {/* Property Name */}
-      <CompactFormRow label="Property Name" required>
+      <CompactFormRow label="Property Name" required htmlFor="property-name">
         <CompactInput
           id="property-name"
           value={data.name}
@@ -64,7 +64,7 @@ const PropertyDetailsSection: React.FC<PropertyDetailsSectionProps> = ({
       </CompactFormRow>
 
       {/* Address */}
-      <CompactFormRow label="Address">
+      <CompactFormRow label="Address" htmlFor="property-address">
         <CompactInput
           id="property-address"
           value={data.address}
@@ -74,7 +74,7 @@ const PropertyDetailsSection: React.FC<PropertyDetailsSectionProps> = ({
       </CompactFormRow>
 
       {/* Property Type */}
-      <CompactFormRow label="Property Type" required>
+      <CompactFormRow label="Property Type" required htmlFor="property-type">
         <CompactSelect
           id="property-type"
           value={data.type}
@@ -85,7 +85,7 @@ const PropertyDetailsSection: React.FC<PropertyDetailsSectionProps> = ({
       </CompactFormRow>
 
       {/* Investment Strategy */}
-      <CompactFormRow label="Investment Strategy" required>
+      <CompactFormRow label="Investment Strategy" required htmlFor="property-strategy">
         <CompactSelect
           id="property-strategy"
           value={data.strategy}
@@ -96,7 +96,7 @@ const PropertyDetailsSection: React.FC<PropertyDetailsSectionProps> = ({
       </CompactFormRow>
 
       {/* Status */}
-      <CompactFormRow label="Status">
+      <CompactFormRow label="Status" htmlFor="property-status">
         <CompactSelect
           id="property-status"
           value={data.status || ''}
@@ -108,11 +108,11 @@ const PropertyDetailsSection: React.FC<PropertyDetailsSectionProps> = ({
 
       {/* Strategy Description */}
       {data.strategy && (
-        <div className="bg-blue-50 border-l-2 border-blue-400 p-3 mt-3">
-          <h4 className="text-xs font-semibold text-blue-900 mb-1">
+        <div className="bg-primary/10 border-l-4 border-primary p-4 mt-4">
+          <h4 className="text-sm font-semibold text-secondary mb-2">
             {strategies.find(s => s.value === data.strategy)?.label} Strategy
           </h4>
-          <p className="text-xs text-blue-800 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {data.strategy === 'buy_hold' && 
               'Long-term investment strategy focused on rental income and capital appreciation over time.'
             }

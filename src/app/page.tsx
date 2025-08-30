@@ -21,11 +21,20 @@ export default function Home() {
               View Dashboard
             </Link>
             <Link 
-              href="/auth"
+              href="/auth/login"
               className="bg-white hover:bg-gray-50 text-blue-600 font-semibold py-3 px-8 rounded-lg border-2 border-blue-600 transition-colors"
             >
               Sign In
             </Link>
+          </div>
+          
+          <div className="text-center mb-8">
+            <p className="text-gray-600">
+              Don't have an account?{' '}
+              <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium">
+                Create one now
+              </Link>
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">

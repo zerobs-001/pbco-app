@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+import { createClient } from '@/lib/supabase/server';
+import { requireAuth, canAccessPortfolio } from '@/lib/middleware/auth';
+import { validateAndSanitize, CreatePropertyRequestSchema } from '@/lib/validation/property';
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await requireAuth();
+    
     const { searchParams } = new URL(request.url);
     const portfolioId = searchParams.get('portfolioId');
 
@@ -23,9 +17,66 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🔍 API: Fetching properties for portfolio:', portfolioId);
+    // Create authenticated Supabase client
+    const supabase = await createClient();
 
-    // Fetch properties using service role (bypasses RLS)
+    // Verify portfolio ownership or admin access
+    const { data: portfolio, error: portfolioError } = await supabase
+      .from('portfolios')
+      .select('user_id')
+      .eq('id', portfolioId)
+      .single();
+
+    if (portfolioError || !portfolio) {
+      // For development, create the portfolio if it doesn't exist
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Creating missing portfolio for development:', portfolioId);
+        
+        const { data: newPortfolio, error: createError } = await supabase
+          .from('portfolios')
+          .insert({
+            id: portfolioId,
+            user_id: user.id,
+            name: 'Development Portfolio',
+            globals: {
+              startYear: 2024,
+              marginalTax: 0.37,
+              medicare: 0.02,
+              rentGrowth: 0.03,
+              expenseInflation: 0.025,
+              capitalGrowth: 0.04,
+              targetIncome: 100000
+            },
+            start_year: 2024
+          })
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error('Error creating portfolio:', createError);
+          return NextResponse.json(
+            { error: 'Portfolio not found and could not create' },
+            { status: 404 }
+          );
+        }
+        
+        console.log('Created portfolio:', newPortfolio.id);
+      } else {
+        return NextResponse.json(
+          { error: 'Portfolio not found' },
+          { status: 404 }
+        );
+      }
+    }
+
+    if (!canAccessPortfolio(user, portfolio.user_id)) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
+    }
+
+    // Fetch properties using authenticated user (RLS will enforce access)
     const { data: properties, error } = await supabase
       .from('properties')
       .select(`
@@ -43,10 +94,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('✅ Properties found:', properties.length);
+    // Log count only, not sensitive data
+    console.log('✅ Properties found:', properties?.length || 0);
 
     // Map the properties data to match our service format
-    const mappedProperties = properties.map((property: any) => {
+    const mappedProperties = properties.map((property: Record<string, unknown>) => {
       const propertyData = property.data || {};
       return {
         id: property.id,
@@ -101,17 +153,46 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireAuth();
+    
     const body = await request.json();
-    const { portfolioId, propertyData, loanData } = body;
-
-    if (!portfolioId || !propertyData) {
+    
+    // Validate input data
+    const validation = validateAndSanitize(CreatePropertyRequestSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: portfolioId and propertyData' },
+        { error: `Validation failed: ${validation.error}` },
         { status: 400 }
       );
     }
+    
+    const { portfolioId, propertyData, loanData } = validation.data;
 
-    // Create property using service role (bypasses RLS)
+    // Create authenticated Supabase client
+    const supabase = await createClient();
+
+    // Verify portfolio ownership or admin access
+    const { data: portfolio, error: portfolioError } = await supabase
+      .from('portfolios')
+      .select('user_id')
+      .eq('id', portfolioId)
+      .single();
+
+    if (portfolioError || !portfolio) {
+      return NextResponse.json(
+        { error: 'Portfolio not found' },
+        { status: 404 }
+      );
+    }
+
+    if (!canAccessPortfolio(user, portfolio.user_id)) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
+    }
+
+    // Create property using authenticated user (RLS will enforce access)
     const { data: property, error } = await supabase
       .from('properties')
       .insert({
@@ -131,8 +212,6 @@ export async function POST(request: NextRequest) {
 
     // If loan data is provided, create the loan and embed it in the property data
     if (loanData) {
-      console.log('Creating loan with property:', { propertyId: property.id, loanData });
-      
       const newLoan = {
         id: `loan_${Date.now()}`, // Generate a simple ID for the loan
         ...loanData,
@@ -160,8 +239,10 @@ export async function POST(request: NextRequest) {
         // Don't fail the whole request - property was created successfully
         console.warn('Property created but loan creation failed');
       } else {
-        // Use the updated property with loan data
+              // Use the updated property with loan data
+      if (property) {
         property.data = updatedPropertyData;
+      }
       }
     }
 
